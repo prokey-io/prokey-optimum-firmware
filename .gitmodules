@@ -1,0 +1,15 @@
+[submodule "vendor/nanopb"]
+	path = vendor/nanopb
+	url = https://github.com/nanopb/nanopb.git
+[submodule "vendor/QR-Code-generator"]
+	path = vendor/QR-Code-generator
+	url = https://github.com/nayuki/QR-Code-generator.git
+[submodule "common/defs/ethereum/tokens"]
+	path = common/defs/ethereum/tokens
+	url = https://github.com/ethereum-lists/tokens.git
+[submodule "crypto/tests/wycheproof"]
+	path = crypto/tests/wycheproof
+	url = https://github.com/google/wycheproof
+[submodule "vendor/libopencm3"]
+	path = vendor/libopencm3
+	url = https://github.com/libopencm3/libopencm3.git
