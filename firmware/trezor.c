@@ -37,6 +37,7 @@
 #include "auth.h"
 #include <libopencm3/stm32/gpio.h>
 #include "prokey_recovery.h"
+#include "pin_number.h"
 #if !EMULATOR
 #include <libopencm3/stm32/desig.h>
 #include "otp.h"
@@ -131,7 +132,6 @@ int main(void)
   oledInit();
   
   // TODO: Check First boot to update
-
   check_bootloader();
   
   setupApp();
@@ -149,11 +149,6 @@ int main(void)
     collect_hw_entropy(false);
   }
 
-  // while(1){
-  //   gpio_toggle( GPIOA, GPIO8 );
-  //   for( volatile int i=0; i<299999; i++ );
-  // }
-
 #if DEBUG_LINK
   oledSetDebugLink(1);
   config_wipe();
@@ -167,6 +162,11 @@ int main(void)
   config_init();
   layoutHome();
   usbInit();
+
+  char* msg = "Enter pin:";
+  char pin[9];
+  PinNumberGet(msg, pin);
+
   for (;;) {
     usbPoll();
     
