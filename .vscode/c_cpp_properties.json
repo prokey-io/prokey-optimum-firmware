@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "Prokey-Optimum-Firmware",
+            "includePath": [
+                "${workspaceRoot}",
+                "${workspaceRoot}/legacy",
+                "${workspaceRoot}/legacy/firmware",
+                "${workspaceRoot}/legacy/firmware/protob",
+                "${workspaceRoot}/legacy/vendor/nanopb",
+                "${workspaceRoot}/legacy/gen",
+                "${workspaceRoot}/legacy/vendor/libopencm3/include/libopencm3/stm32/f2",
+                "${workspaceRoot}/legacy/vendor/libopencm3/include/libopencm3/stm32",
+                "${workspaceRoot}/legacy/vendor/libopencm3/include",
+                "${workspaceRoot}/crypto"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "browse": {
+                "path": [
+                    "${workspaceRoot}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "${workspaceRoot}/.vscode/browse.vc.db"
+            },
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

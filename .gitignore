@@ -1,0 +1,9 @@
+build/
+*.hex
+*.img
+*.list
+*.log
+*.srec
+*.o
+*.d
+*.a

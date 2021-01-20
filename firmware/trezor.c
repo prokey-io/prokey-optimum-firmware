@@ -163,9 +163,13 @@ int main(void)
   layoutHome();
   usbInit();
 
-  char* msg = "Enter pin:";
   char pin[9];
-  PinNumberGet(msg, pin);
+  PinNumberGet(_("Enter Pin"), pin);
+
+  while(1){
+
+
+  }
 
   for (;;) {
     usbPoll();

@@ -1,0 +1,31 @@
+{
+    "files.associations": {
+        "otg_fs.h": "c",
+        "rcc.h": "c",
+        "iwdg.h": "c",
+        "iwdg_common_all.h": "c",
+        "serialno.h": "c",
+        "spi_master.h": "c",
+        "aes.h": "c",
+        "hid.h": "c",
+        "messages.pb.h": "c",
+        "pb_encode.h": "c",
+        "*.tcc": "c",
+        "config.h": "c",
+        "bip32.h": "c",
+        "bootloader.h": "c"
+    },
+
+    "terminal.integrated.shell.windows": "C:/msys32/usr/bin/bash.exe",
+    "terminal.integrated.shellArgs.windows": [
+        "--login",
+    ],
+
+    "terminal.integrated.env.windows": {
+        "CHERE_INVOKING": "1",
+        "MSYSTEM": "MINGW32",
+    },
+    "python.pythonPath": "/home/hadi/.local/share/virtualenvs/prokey-optimum-firmware-DF6C0c7b/bin/python",
+
+    //"cortex-debug.openocdPath": "E:/MyProjects/tools/openocd/bin/",
+}

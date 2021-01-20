@@ -25,16 +25,17 @@
 //**********************************
 //
 //**********************************
-static bool    PinNumberGet(const char* msg, char* enteredPin)
+bool    PinNumberGet(const char* msg, char* enteredPin)
 {
     bool isLcdNeedUpdate = true;
     int pinIndex = 0;
     int longPressCounter = 0;
     int okProgressCounter = 0;
-    char chr[MAX_PIN_LEN] = {'0', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+    char chr[MAX_PIN_LEN] = {'5', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
     int x = 5; 
-    int y1 = 23;
-    int y2 = 33;
+    int y1 = 11;
+    int ym = 23;
+    int y2 = 30;
 
     while(true)
     {
@@ -50,66 +51,70 @@ static bool    PinNumberGet(const char* msg, char* enteredPin)
 
             //! Pin number body
             //! Line 1
-            for(int n=0; n<5; n++)
+            for(int n=0; n<6; n++)
             {
                 if(pinIndex == n )
-                    oledDrawChar(x + 2 + (n*19), y1, chr[n], FONT_DOUBLE);
+                    oledDrawChar(x + 4 + (n*19), (pinIndex < 6) ? ym : y1, chr[n], FONT_DOUBLE);
                 else
                 {
-                    oledDrawChar(x + 2 + (n*19), y1, '*', FONT_DOUBLE);
+                    if(chr[n] != ' ')
+                        oledDrawChar(x + 4 + (n*19), (pinIndex < 6) ? ym : y1, '*', FONT_DOUBLE);
                 }
             }
 
             //! Line 2
-            for(int n=5; n<MAX_PIN_LEN; n++)
+            for(int n=6; n<MAX_PIN_LEN; n++)
             {
                 if(pinIndex == n)
                 {
-                    oledDrawChar(x + 2 + ((n-5)*19), y2, chr[n], FONT_DOUBLE);
+                    oledDrawChar(x + 4 + ((n-6)*19), y2, chr[n], FONT_DOUBLE);
                 }
                 else
                 {
-                    oledDrawChar(x + 2 + ((n-5)*19), y2, '*', FONT_DOUBLE);
+                    if(chr[n] != ' ')
+                        oledDrawChar(x + 4 + ((n-6)*19), y2, '*', FONT_DOUBLE);
                 }
                 
             }
 
             //! Invert(highlight) the current editing pin
             //! if first line
-            if(pinIndex < 5)
+            if(pinIndex < 6)
             {
-                oledInvert(x+(pinIndex*19), y1-1, x+(pinIndex*19)+19, y1+16);
+                oledInvert(x+(pinIndex*19), ym-1, x+(pinIndex*19)+19, ym+16);
             }
             //! if second line
             else
             {
-                oledInvert(x+((pinIndex-5)*19), y2-1, x+((pinIndex-5)*19)+19, y2+16);   
+                oledInvert(x+((pinIndex-6)*19), y2-1, x+((pinIndex-6)*19)+19, y2+16);   
             }
             
 
             //! Footer
             oledHLine( OLED_HEIGHT-10);
-            if(pinIndex < 0)
+            if(pinIndex < 4)
             {
-                oledDrawString(OLED_WIDTH - 6*6, OLED_HEIGHT-8, "NEXT", FONT_STANDARD);
+                oledDrawString(OLED_WIDTH - 26, OLED_HEIGHT-8, "NEXT", FONT_STANDARD);
             }
-            else if(pinIndex >=4 & pinIndex < 8)
+            else if(pinIndex >=4 && pinIndex < 8)
             {
-                oledDrawString(OLED_WIDTH - 9*6, OLED_HEIGHT-8, "NEXT/OK", FONT_STANDARD);
+                oledDrawString(OLED_WIDTH - 44, OLED_HEIGHT-8, "NEXT/OK", FONT_STANDARD);
             }
             else
             {
                 oledDrawString(OLED_WIDTH - 3*6, OLED_HEIGHT-8, "OK", FONT_STANDARD);
             }
 
-            if(longPressCounter > 0)
+            if(okProgressCounter > 10)
             {
-                int m = longPressCounter;
-                if(m > 30)
-                    m = 30;
+                oledFrame(0, OLED_HEIGHT-9, 66, OLED_HEIGHT-1);
+
+                int m = okProgressCounter-10;
+                if(m > 64)
+                    m = 64;
                 for(int v=0; v<m; v++)
                 {
-                    oledInvert(2+v, OLED_HEIGHT-8, 2+v, OLED_HEIGHT-1);
+                    oledInvert(2+v, OLED_HEIGHT-7, 2+v, OLED_HEIGHT-3);
                 }
             }
 
@@ -120,36 +125,65 @@ static bool    PinNumberGet(const char* msg, char* enteredPin)
 
         if( button.DownUp )
         {
-            if( ++chr[pinIndex] > '9' )
+            if(chr[pinIndex] == ' ' || chr[pinIndex] == '*')
+                chr[pinIndex] = '0';
+            else if( ++chr[pinIndex] > '9' )
                 chr[pinIndex] = '0';
             
+            isLcdNeedUpdate = true;
+            
+            okProgressCounter = 0;
+            longPressCounter = 0;
         }
         else if( button.UpUp )
         {
-            if( --chr[pinIndex] < '0' )
+            if(chr[pinIndex] == ' ' || chr[pinIndex] == '*')
                 chr[pinIndex] = '9';
+            else if( --chr[pinIndex] < '0' )
+                chr[pinIndex] = '9';
+            
+            isLcdNeedUpdate = true;
+
+            okProgressCounter = 0;
+            longPressCounter = 0;
         }
         else if( button.NoUp )
         {
             if(pinIndex == 0)
             {
-                return false;
+                continue;
+                //return false;
             }
 
             chr[pinIndex--] = ' ';
+            chr[pinIndex] = '*';
+
+            isLcdNeedUpdate = true;
+            okProgressCounter = 0;
+            longPressCounter = 0;
         }
         else if(button.YesUp)
         {
-            if(pinIndex < MAX_PIN_LEN)
+            if(pinIndex < MAX_PIN_LEN-1 && okProgressCounter < 10 && chr[pinIndex] != '*')
             {
                 pinIndex++;
-                chr[pinIndex] = '0';
+                chr[pinIndex] = '5';
             }
-        }
-        else if(button.YesDown > 1000 )
-        {
-            longPressCounter++;
+
+            longPressCounter = 0;
+            okProgressCounter = 0;
             isLcdNeedUpdate = true;
         }
+        else if(button.YesDown > 2000 )
+        {
+            longPressCounter++;
+            if(longPressCounter > 25)
+            {
+                longPressCounter = 0;
+                okProgressCounter++;
+            }
+            isLcdNeedUpdate = true;
+        }
+        
     }
 }
