@@ -19,6 +19,6 @@
 #ifndef PIN_NUMBER_H
 #define PIN_NUMBER_H
 
-bool    PinNumberGet(const char* msg, char* enteredPin);
+bool PinNumberCheck ( bool used_cached );
 
 #endif // PIN_NUMBER_H

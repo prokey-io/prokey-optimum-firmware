@@ -52,6 +52,7 @@
 #include "trezor.h"
 #include "usb.h"
 #include "util.h"
+#include "pin_number.h"
 
 #if !BITCOIN_ONLY
 #include "ethereum.h"
@@ -84,7 +85,7 @@ static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__((aligned));
   }
 
 #define CHECK_PIN          \
-  if (!protectPin(true)) { \
+  if (!PinNumberCheck(true)) { \
     layoutHome();          \
     return;                \
   }

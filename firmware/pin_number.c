@@ -21,24 +21,45 @@
 #include "oled.h"
 #include "memzero.h"
 #include "config.h"
+#include "gettext.h"
+#include "usb.h"
+#include "messages.pb.h"
+#include "messages.h"
 
 //**********************************
-//
+// 
 //**********************************
-bool    PinNumberGet(const char* msg, char* enteredPin)
+static bool    PinNumberGet(const char* msg, char* enteredPin)
 {
     bool isLcdNeedUpdate = true;
     int pinIndex = 0;
     int longPressCounter = 0;
     int okProgressCounter = 0;
+    int timeOutCounter = 0;
     char chr[MAX_PIN_LEN] = {'5', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
-    int x = 5; 
-    int y1 = 11;
-    int ym = 23;
-    int y2 = 30;
+    const int y1 = 11;
+    const int ym = 23;
+    const int y2 = 30;
 
-    while(true)
+    PinMatrixRequest resp;
+    memzero(&resp, sizeof(PinMatrixRequest));
+    resp.has_type = true;
+    resp.type = PinMatrixRequestType_PinMatrixRequestType_Current;
+    usbTiny(1);
+    msg_write(MessageType_MessageType_PinMatrixRequest, &resp);
+
+    //! Timeout about 1 minute
+    while(timeOutCounter++ < 60000000)
     {
+        usbPoll();
+
+        if(msg_tiny_id == MessageType_MessageType_Cancel)
+        {
+            msg_tiny_id = 0xFFFF;
+            usbTiny(0);
+            return false;
+        }
+
         if(isLcdNeedUpdate)
         {
             isLcdNeedUpdate = false;
@@ -54,11 +75,11 @@ bool    PinNumberGet(const char* msg, char* enteredPin)
             for(int n=0; n<6; n++)
             {
                 if(pinIndex == n )
-                    oledDrawChar(x + 4 + (n*19), (pinIndex < 6) ? ym : y1, chr[n], FONT_DOUBLE);
+                    oledDrawChar(9 + (n*19), (pinIndex < 6) ? ym : y1, chr[n], FONT_DOUBLE);
                 else
                 {
                     if(chr[n] != ' ')
-                        oledDrawChar(x + 4 + (n*19), (pinIndex < 6) ? ym : y1, '*', FONT_DOUBLE);
+                        oledDrawChar(9 + (n*19), (pinIndex < 6) ? ym : y1, '*', FONT_DOUBLE);
                 }
             }
 
@@ -67,12 +88,12 @@ bool    PinNumberGet(const char* msg, char* enteredPin)
             {
                 if(pinIndex == n)
                 {
-                    oledDrawChar(x + 4 + ((n-6)*19), y2, chr[n], FONT_DOUBLE);
+                    oledDrawChar(9 + ((n-6)*19), y2, chr[n], FONT_DOUBLE);
                 }
                 else
                 {
                     if(chr[n] != ' ')
-                        oledDrawChar(x + 4 + ((n-6)*19), y2, '*', FONT_DOUBLE);
+                        oledDrawChar(9 + ((n-6)*19), y2, '*', FONT_DOUBLE);
                 }
                 
             }
@@ -81,24 +102,29 @@ bool    PinNumberGet(const char* msg, char* enteredPin)
             //! if first line
             if(pinIndex < 6)
             {
-                oledInvert(x+(pinIndex*19), ym-1, x+(pinIndex*19)+19, ym+16);
+                oledInvert(5+(pinIndex*19), ym-1, 5+(pinIndex*19)+19, ym+16);
             }
             //! if second line
             else
             {
-                oledInvert(x+((pinIndex-6)*19), y2-1, x+((pinIndex-6)*19)+19, y2+16);   
+                oledInvert(5+((pinIndex-6)*19), y2-1, 5+((pinIndex-6)*19)+19, y2+16);   
             }
             
 
             //! Footer
             oledHLine( OLED_HEIGHT-10);
-            if(pinIndex < 4)
+            if(pinIndex == 0)
             {
-                oledDrawString(OLED_WIDTH - 26, OLED_HEIGHT-8, "NEXT", FONT_STANDARD);
+                oledDrawString(1, OLED_HEIGHT-8, "Cancel", FONT_STANDARD);
+                oledDrawString(OLED_WIDTH - 26, OLED_HEIGHT-8, "Next", FONT_STANDARD);
             }
-            else if(pinIndex >=4 && pinIndex < 8)
+            else if(pinIndex < 3)
             {
-                oledDrawString(OLED_WIDTH - 44, OLED_HEIGHT-8, "NEXT/OK", FONT_STANDARD);
+                oledDrawString(OLED_WIDTH - 26, OLED_HEIGHT-8, "Next", FONT_STANDARD);
+            }
+            else if(pinIndex >=3 && pinIndex < 8)
+            {
+                oledDrawString(OLED_WIDTH - 44, OLED_HEIGHT-8, "Next/OK", FONT_STANDARD);
             }
             else
             {
@@ -134,6 +160,7 @@ bool    PinNumberGet(const char* msg, char* enteredPin)
             
             okProgressCounter = 0;
             longPressCounter = 0;
+            timeOutCounter = 0;
         }
         else if( button.UpUp )
         {
@@ -146,13 +173,13 @@ bool    PinNumberGet(const char* msg, char* enteredPin)
 
             okProgressCounter = 0;
             longPressCounter = 0;
+            timeOutCounter = 0;
         }
         else if( button.NoUp )
         {
             if(pinIndex == 0)
             {
-                continue;
-                //return false;
+                return false;
             }
 
             chr[pinIndex--] = ' ';
@@ -173,17 +200,74 @@ bool    PinNumberGet(const char* msg, char* enteredPin)
             longPressCounter = 0;
             okProgressCounter = 0;
             isLcdNeedUpdate = true;
+            timeOutCounter = 0;
         }
-        else if(button.YesDown > 2000 )
+        else if(pinIndex >= 3 && button.YesDown > 2000 )
         {
             longPressCounter++;
             if(longPressCounter > 25)
             {
                 longPressCounter = 0;
                 okProgressCounter++;
+                if(okProgressCounter >= 64)
+                {
+                    int d=0;
+                    for(; d<=pinIndex; d++)
+                    {
+                        enteredPin[d] = chr[d];
+                    }
+                    enteredPin[d] = '\0';
+
+                    usbTiny(0);
+                    return true;
+                }
             }
             isLcdNeedUpdate = true;
+            timeOutCounter = 0;
         }
         
     }
+
+    usbTiny(0);
+    return false;
+}
+//**********************************
+// 
+//**********************************
+bool PinNumberCheck ( bool use_cached )
+{
+    if( config_hasPin() == false )
+        return true;
+
+    if (use_cached && session_isUnlocked()) {
+        return true;
+    }
+
+    int failedCounter = 0;
+    char pin[MAX_PIN_LEN+1] = {0,0,0,0,0,0,0,0,0,0};
+
+    while (failedCounter++ < 3)
+    {
+        if(PinNumberGet(_("Enter Pin"), pin) == false)
+        {
+            fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+            return false;
+        }
+        
+        if(config_unlock(pin) == false)
+        {
+            oledClear();
+            layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
+            oledRefresh();
+            ButtonGet(BTN_YES);
+            fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+        }
+        else
+        {
+            return true;
+        }
+        
+    }
+
+    return false;
 }

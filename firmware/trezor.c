@@ -132,7 +132,7 @@ int main(void)
   oledInit();
   
   // TODO: Check First boot to update
-  check_bootloader();
+  //check_bootloader();
   
   setupApp();
 
@@ -163,13 +163,7 @@ int main(void)
   layoutHome();
   usbInit();
 
-  char pin[9];
-  PinNumberGet(_("Enter Pin"), pin);
-
-  while(1){
-
-
-  }
+  //PinNumberCheck();
 
   for (;;) {
     usbPoll();
