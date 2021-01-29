@@ -19,6 +19,8 @@
 #ifndef PIN_NUMBER_H
 #define PIN_NUMBER_H
 
-bool PinNumberCheck ( bool used_cached );
+#include <stdbool.h>
+
+bool            PinNumberCheck  ( bool used_cached );
 
 #endif // PIN_NUMBER_H

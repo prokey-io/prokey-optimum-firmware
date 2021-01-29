@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "pin_number.h"
 #include "layout2.h"
 #include "buttons.h"
 #include "oled.h"
@@ -25,7 +26,58 @@
 #include "usb.h"
 #include "messages.pb.h"
 #include "messages.h"
+#include "fsm.h"
 
+static bool            PinNumberGet    ( const char* msg, char* enteredPin );
+
+//**********************************
+// 
+//**********************************
+bool PinNumberCheck ( bool use_cached )
+{
+    if( config_hasPin() == false )
+        return true;
+
+    if (use_cached && session_isUnlocked()) {
+        return true;
+    }
+
+    ButtonRequest resp;
+    memzero(&resp, sizeof(ButtonRequest));
+    resp.has_code = true;
+    resp.code = ButtonRequestType_ButtonRequest_EnterPinOnDevice;
+    usbTiny(1);
+    msg_write(MessageType_MessageType_ButtonRequest, &resp);
+
+    int failedCounter = 0;
+    char pin[MAX_PIN_LEN+1] = {0,0,0,0,0,0,0,0,0,0};
+
+    while (failedCounter++ < 3)
+    {
+        if(PinNumberGet(_("Enter Pin"), pin) == false)
+        {
+            fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
+            return false;
+        }
+        
+        if(config_unlock(pin) == false)
+        {
+            oledClear();
+            layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
+            fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+            oledRefresh();
+            buttonUpdate();
+            ButtonGet(BTN_YES);
+        }
+        else
+        {
+            return true;
+        }
+        
+    }
+
+    return false;
+}
 //**********************************
 // 
 //**********************************
@@ -41,24 +93,26 @@ static bool    PinNumberGet(const char* msg, char* enteredPin)
     const int ym = 23;
     const int y2 = 30;
 
-    PinMatrixRequest resp;
-    memzero(&resp, sizeof(PinMatrixRequest));
-    resp.has_type = true;
-    resp.type = PinMatrixRequestType_PinMatrixRequestType_Current;
-    usbTiny(1);
-    msg_write(MessageType_MessageType_PinMatrixRequest, &resp);
-
     //! Timeout about 1 minute
     while(timeOutCounter++ < 60000000)
     {
         usbPoll();
 
-        if(msg_tiny_id == MessageType_MessageType_Cancel)
+        if (msg_tiny_id == MessageType_MessageType_ButtonAck) 
+        {
+            msg_tiny_id = 0xFFFF;
+        }
+        else if(msg_tiny_id == MessageType_MessageType_Cancel)
         {
             msg_tiny_id = 0xFFFF;
             usbTiny(0);
             return false;
         }
+        else
+        {
+            msg_tiny_id = 0xFFFF;
+        }
+        
 
         if(isLcdNeedUpdate)
         {
@@ -149,7 +203,7 @@ static bool    PinNumberGet(const char* msg, char* enteredPin)
 
         buttonUpdate();
 
-        if( button.DownUp )
+        if( button.UpUp )
         {
             if(chr[pinIndex] == ' ' || chr[pinIndex] == '*')
                 chr[pinIndex] = '0';
@@ -162,7 +216,7 @@ static bool    PinNumberGet(const char* msg, char* enteredPin)
             longPressCounter = 0;
             timeOutCounter = 0;
         }
-        else if( button.UpUp )
+        else if( button.DownUp )
         {
             if(chr[pinIndex] == ' ' || chr[pinIndex] == '*')
                 chr[pinIndex] = '9';
@@ -193,8 +247,7 @@ static bool    PinNumberGet(const char* msg, char* enteredPin)
         {
             if(pinIndex < MAX_PIN_LEN-1 && okProgressCounter < 10 && chr[pinIndex] != '*')
             {
-                pinIndex++;
-                chr[pinIndex] = '5';
+                chr[++pinIndex] = '5';
             }
 
             longPressCounter = 0;
@@ -205,7 +258,7 @@ static bool    PinNumberGet(const char* msg, char* enteredPin)
         else if(pinIndex >= 3 && button.YesDown > 2000 )
         {
             longPressCounter++;
-            if(longPressCounter > 25)
+            if(longPressCounter > 15)
             {
                 longPressCounter = 0;
                 okProgressCounter++;
@@ -229,45 +282,5 @@ static bool    PinNumberGet(const char* msg, char* enteredPin)
     }
 
     usbTiny(0);
-    return false;
-}
-//**********************************
-// 
-//**********************************
-bool PinNumberCheck ( bool use_cached )
-{
-    if( config_hasPin() == false )
-        return true;
-
-    if (use_cached && session_isUnlocked()) {
-        return true;
-    }
-
-    int failedCounter = 0;
-    char pin[MAX_PIN_LEN+1] = {0,0,0,0,0,0,0,0,0,0};
-
-    while (failedCounter++ < 3)
-    {
-        if(PinNumberGet(_("Enter Pin"), pin) == false)
-        {
-            fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-            return false;
-        }
-        
-        if(config_unlock(pin) == false)
-        {
-            oledClear();
-            layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
-            oledRefresh();
-            ButtonGet(BTN_YES);
-            fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
-        }
-        else
-        {
-            return true;
-        }
-        
-    }
-
     return false;
 }

@@ -13,7 +13,13 @@
         "*.tcc": "c",
         "config.h": "c",
         "bip32.h": "c",
-        "bootloader.h": "c"
+        "bootloader.h": "c",
+        "array": "c",
+        "istream": "c",
+        "ostream": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c"
     },
 
     "terminal.integrated.shell.windows": "C:/msys32/usr/bin/bash.exe",
