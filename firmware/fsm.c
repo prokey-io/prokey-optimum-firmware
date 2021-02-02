@@ -91,7 +91,7 @@ static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__((aligned));
   }
 
 #define CHECK_PIN_UNCACHED  \
-  if (!protectPin(false)) { \
+  if (!PinNumberCheck(false)) { \
     layoutHome();           \
     return;                 \
   }

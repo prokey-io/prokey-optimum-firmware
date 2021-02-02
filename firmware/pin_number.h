@@ -20,7 +20,9 @@
 #define PIN_NUMBER_H
 
 #include <stdbool.h>
+#include "messages-common.pb.h"
 
 bool            PinNumberCheck  ( bool used_cached );
+bool            PinNumberEnter  ( ButtonRequestType type, const char* title, char* pin);
 
 #endif // PIN_NUMBER_H
