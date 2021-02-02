@@ -21,17 +21,4 @@
         "type_traits": "c",
         "utility": "c"
     },
-
-    "terminal.integrated.shell.windows": "C:/msys32/usr/bin/bash.exe",
-    "terminal.integrated.shellArgs.windows": [
-        "--login",
-    ],
-
-    "terminal.integrated.env.windows": {
-        "CHERE_INVOKING": "1",
-        "MSYSTEM": "MINGW32",
-    },
-    "python.pythonPath": "/home/hadi/.local/share/virtualenvs/prokey-optimum-firmware-DF6C0c7b/bin/python",
-
-    //"cortex-debug.openocdPath": "E:/MyProjects/tools/openocd/bin/",
 }
