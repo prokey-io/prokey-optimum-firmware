@@ -32,6 +32,7 @@
 #include "rng.h"
 #include "usb.h"
 #include "buttons.h"
+#include "pin_number.h"
 
 /* number of words expected in the new seed */
 static uint32_t wordCount = 0;
@@ -86,7 +87,7 @@ void ProRecovery( char isOnlyCheck )
 
     if( isOnlyCheck )
     {
-        if (!protectPin(true)) 
+        if (!PinNumberCheck(true)) 
         { 
             layoutHome();          
             return; 

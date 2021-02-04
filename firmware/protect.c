@@ -32,6 +32,7 @@
 #include "pinmatrix.h"
 #include "usb.h"
 #include "util.h"
+#include "pin_number.h"
 
 #define MAX_WRONG_PINS 15
 
@@ -111,41 +112,6 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
   return result;
 }
 
-const char *requestPin(PinMatrixRequestType type, const char *text) {
-  PinMatrixRequest resp;
-  memzero(&resp, sizeof(PinMatrixRequest));
-  resp.has_type = true;
-  resp.type = type;
-  usbTiny(1);
-  msg_write(MessageType_MessageType_PinMatrixRequest, &resp);
-  pinmatrix_start(text);
-  for (;;) {
-    usbPoll();
-    if (msg_tiny_id == MessageType_MessageType_PinMatrixAck) {
-      msg_tiny_id = 0xFFFF;
-      PinMatrixAck *pma = (PinMatrixAck *)msg_tiny;
-      pinmatrix_done(pma->pin);  // convert via pinmatrix
-      usbTiny(0);
-      return pma->pin;
-    }
-    // check for Cancel / Initialize
-    protectAbortedByCancel = (msg_tiny_id == MessageType_MessageType_Cancel);
-    protectAbortedByInitialize =
-        (msg_tiny_id == MessageType_MessageType_Initialize);
-    if (protectAbortedByCancel || protectAbortedByInitialize) {
-      pinmatrix_done(0);
-      msg_tiny_id = 0xFFFF;
-      usbTiny(0);
-      return 0;
-    }
-#if DEBUG_LINK
-    if (msg_tiny_id == MessageType_MessageType_DebugLinkGetState) {
-      msg_tiny_id = 0xFFFF;
-      fsm_msgDebugLinkGetState((DebugLinkGetState *)msg_tiny);
-    }
-#endif
-  }
-}
 
 secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
                              const char *message) {
@@ -191,37 +157,15 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
   return secfalse;
 }
 
-bool protectPin(bool use_cached) {
-  if (use_cached && session_isUnlocked()) {
-    return true;
-  }
-
-  const char *pin = "";
-  if (config_hasPin()) {
-    pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
-                     _("Please enter current PIN:"));
-    if (!pin) {
-      fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
-      return false;
-    }
-  }
-
-  bool ret = config_unlock(pin);
-  if (!ret) {
-    fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
-  }
-  return ret;
-}
-
 bool protectChangePin(bool removal) {
   static CONFIDENTIAL char old_pin[MAX_PIN_LEN + 1] = "";
   static CONFIDENTIAL char new_pin[MAX_PIN_LEN + 1] = "";
-  const char *pin = NULL;
+  static CONFIDENTIAL char pin[MAX_PIN_LEN + 1] = "";
 
   if (config_hasPin()) {
-    pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_Current,
-                     _("Please enter current PIN:"));
-    if (pin == NULL) {
+
+    if(!PinNumberEnter(ButtonRequestType_ButtonRequest_EnterPinOnDevice, "CURRENT Pin", pin))
+    {
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
     }
@@ -241,18 +185,14 @@ bool protectChangePin(bool removal) {
   }
 
   if (!removal) {
-    pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewFirst,
-                     _("Please enter new PIN:"));
-    if (pin == NULL) {
+    if (!PinNumberEnter(ButtonRequestType_ButtonRequest_EnterNewPinOnDevice, "Enter NEW Pin", pin)) {
       memzero(old_pin, sizeof(old_pin));
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
     }
     strlcpy(new_pin, pin, sizeof(new_pin));
 
-    pin = requestPin(PinMatrixRequestType_PinMatrixRequestType_NewSecond,
-                     _("Please re-enter new PIN:"));
-    if (pin == NULL) {
+    if (!PinNumberEnter(ButtonRequestType_ButtonRequest_ReEnterNewPinOnDevice, "RE-ENTER NEW Pin", pin)) {
       memzero(old_pin, sizeof(old_pin));
       memzero(new_pin, sizeof(new_pin));
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
@@ -262,6 +202,11 @@ bool protectChangePin(bool removal) {
     if (strncmp(new_pin, pin, sizeof(new_pin)) != 0) {
       memzero(old_pin, sizeof(old_pin));
       memzero(new_pin, sizeof(new_pin));
+      
+      layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin is", "mismatch.", NULL, NULL, NULL);
+      buttonUpdate();
+      ButtonGet(BTN_YES);
+
       fsm_sendFailure(FailureType_Failure_PinMismatch, NULL);
       return false;
     }
@@ -271,6 +216,11 @@ bool protectChangePin(bool removal) {
   memzero(old_pin, sizeof(old_pin));
   memzero(new_pin, sizeof(new_pin));
   if (ret == false) {
+
+    layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
+    buttonUpdate();
+    ButtonGet(BTN_YES);
+    
     fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
   }
   return ret;
