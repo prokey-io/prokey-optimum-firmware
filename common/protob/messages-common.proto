@@ -61,6 +61,9 @@ message ButtonRequest {
         ButtonRequest_PassphraseType = 14;
         ButtonRequest_UnknownDerivationPath = 15;
         ButtonRequest_EnterPinOnDevice = 101;
+        ButtonRequest_EnterNewPinOnDevice = 102;
+        ButtonRequest_ReEnterNewPinOnDevice = 103;
+        ButtonRequest_PinOnDeviceDone = 104;
     }
 }
 

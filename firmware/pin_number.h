@@ -23,6 +23,6 @@
 #include "messages-common.pb.h"
 
 bool            PinNumberCheck  ( bool used_cached );
-bool            PinNumberEnter  ( ButtonRequestType type, const char* title, char* pin);
+bool            PinNumberEnter  ( ButtonRequestType type, bool isSendDone, const char* title, char* pin);
 
 #endif // PIN_NUMBER_H

@@ -164,7 +164,7 @@ bool protectChangePin(bool removal) {
 
   if (config_hasPin()) {
 
-    if(!PinNumberEnter(ButtonRequestType_ButtonRequest_EnterPinOnDevice, "CURRENT Pin", pin))
+    if(!PinNumberEnter(ButtonRequestType_ButtonRequest_EnterPinOnDevice, true, "CURRENT Pin", pin))
     {
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
@@ -185,14 +185,14 @@ bool protectChangePin(bool removal) {
   }
 
   if (!removal) {
-    if (!PinNumberEnter(ButtonRequestType_ButtonRequest_EnterNewPinOnDevice, "Enter NEW Pin", pin)) {
+    if (!PinNumberEnter(ButtonRequestType_ButtonRequest_EnterNewPinOnDevice, false, "Enter NEW Pin", pin)) {
       memzero(old_pin, sizeof(old_pin));
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
       return false;
     }
     strlcpy(new_pin, pin, sizeof(new_pin));
 
-    if (!PinNumberEnter(ButtonRequestType_ButtonRequest_ReEnterNewPinOnDevice, "RE-ENTER NEW Pin", pin)) {
+    if (!PinNumberEnter(ButtonRequestType_ButtonRequest_ReEnterNewPinOnDevice, true, "RE-ENTER NEW Pin", pin)) {
       memzero(old_pin, sizeof(old_pin));
       memzero(new_pin, sizeof(new_pin));
       fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);

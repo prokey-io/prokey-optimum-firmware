@@ -30,6 +30,7 @@
 #include "fsm.h"
 
 static bool            PinNumberGet    ( const char* msg, char* enteredPin );
+static void            PinNumberDone   ( void );
 
 //**********************************
 // 
@@ -53,7 +54,10 @@ bool PinNumberCheck ( bool use_cached )
     msg_write(MessageType_MessageType_ButtonRequest, &resp);
 
     bool result = PinNumberGet(_("Enter Pin"), pin);
-    msg_tiny_id = 0xFFFF;
+
+    // Send Pin number done
+    PinNumberDone();
+
     usbTiny(0);
 
     // Get Pin number
@@ -87,7 +91,7 @@ bool PinNumberCheck ( bool use_cached )
 //**********************************
 // 
 //**********************************
-bool PinNumberEnter(ButtonRequestType type, const char* title, char* pin)
+bool PinNumberEnter(ButtonRequestType type, bool isSendDone, const char* title, char* pin)
 {
     ButtonRequest resp;
     memzero(&resp, sizeof(ButtonRequest));
@@ -98,7 +102,12 @@ bool PinNumberEnter(ButtonRequestType type, const char* title, char* pin)
 
     usbTiny(1);
     bool result = PinNumberGet(title, pin);
-    msg_tiny_id = 0xFFFF;
+    
+    if(isSendDone){
+        // Done
+        PinNumberDone();
+    }
+
     usbTiny(0);
 
     return result;
@@ -321,4 +330,30 @@ static bool    PinNumberGet(const char* msg, char* chr)
     }
 
     return false;
+}
+
+//**********************************
+// Send Done to the UI
+//**********************************
+static void            PinNumberDone(void)
+{
+    // Done, This message helps the UI to close any message boxes or modal
+    ButtonRequest resp;
+    memzero(&resp, sizeof(ButtonRequest));
+    resp.has_code = true;
+    resp.code = ButtonRequestType_ButtonRequest_PinOnDeviceDone;
+
+    msg_tiny_id = 0xFFFF;
+    msg_write(MessageType_MessageType_ButtonRequest, &resp);
+
+    // wait for ButtonAck
+    while(1)
+    {
+        usbPoll();
+        if(msg_tiny_id == MessageType_MessageType_ButtonAck || msg_tiny_id == MessageType_MessageType_Cancel)
+        {
+            msg_tiny_id = 0xFFFF;
+            break;
+        }
+    }
 }
