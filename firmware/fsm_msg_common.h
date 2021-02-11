@@ -81,7 +81,17 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   config_getNoBackup(&(resp->no_backup));
   resp->has_flags = config_getFlags(&(resp->flags));
   resp->has_model = true;
-  strlcpy(resp->model, "1", sizeof(resp->model));
+  strlcpy(resp->model, "Optimum", sizeof(resp->model));
+
+  resp->has_pin_on_device = true;
+  resp->pin_on_device = true;
+
+  resp->has_view_major_version = true;
+  resp->view_major_version = VIEW_VERSION_MAJOR;
+  resp->has_view_minor_version = true;
+  resp->view_minor_version = VIEW_VERSION_MINOR;
+  resp->has_view_patch_version = true;
+  resp->view_patch_version = VIEW_VERSION_PATCH;
 
   msg_write(MessageType_MessageType_Features, resp);
 }
