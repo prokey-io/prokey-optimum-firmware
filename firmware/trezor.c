@@ -160,6 +160,9 @@ int main(void)
   oledRefresh();
 
   config_init();
+
+  while(PinNumberCheckNoUsb() == false);
+
   layoutHome();
   usbInit();
 
