@@ -160,6 +160,10 @@ int main(void)
   oledRefresh();
 
   config_init();
+
+  // Check the pin number before initializing the USB
+  while(PinNumberCheckNoUsb() == false);
+
   layoutHome();
   usbInit();
 

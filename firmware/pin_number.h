@@ -22,7 +22,8 @@
 #include <stdbool.h>
 #include "messages-common.pb.h"
 
-bool            PinNumberCheck  ( bool used_cached );
-bool            PinNumberEnter  ( ButtonRequestType type, bool isSendDone, const char* title, char* pin);
+bool            PinNumberCheck      ( bool used_cached );
+bool            PinNumberCheckNoUsb ( void );
+bool            PinNumberEnter      ( ButtonRequestType type, bool isSendDone, const char* title, char* pin);
 
 #endif // PIN_NUMBER_H

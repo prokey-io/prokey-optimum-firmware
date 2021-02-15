@@ -29,7 +29,7 @@
 #include "messages.h"
 #include "fsm.h"
 
-static bool            PinNumberGet    ( const char* msg, char* enteredPin );
+static bool            PinNumberGet    ( const char* msg, char* enteredPin, bool isUsb );
 static void            PinNumberDone   ( void );
 
 //**********************************
@@ -53,7 +53,7 @@ bool PinNumberCheck ( bool use_cached )
     usbTiny(1);
     msg_write(MessageType_MessageType_ButtonRequest, &resp);
 
-    bool result = PinNumberGet(_("Enter Pin"), pin);
+    bool result = PinNumberGet(_("Enter Pin"), pin, true);
 
     // Send Pin number done
     PinNumberDone();
@@ -87,7 +87,41 @@ bool PinNumberCheck ( bool use_cached )
 
     return false;
 }
+//**********************************
+// 
+//**********************************
+bool PinNumberCheckNoUsb ( void )
+{
+    static CONFIDENTIAL char pin[MAX_PIN_LEN+1] = {0,0,0,0,0,0,0,0,0,0};
 
+    // Return true if no pin
+    if( config_hasPin() == false )
+        return true;
+
+    // Return true if session was unlocked
+    if (session_isUnlocked()) {
+        return true;
+    }
+
+    // Getting pin number without any USB activity
+    PinNumberGet(_("Enter Pin"), pin, false);
+
+    // Check entered pins
+    if(config_unlock(pin) == false)
+    {
+        // Wrong pin
+        layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
+        buttonUpdate();
+        ButtonGet(BTN_YES);
+    }
+    else
+    {
+        // Session is unlocked 
+        return true;
+    }
+        
+    return false;
+}
 //**********************************
 // 
 //**********************************
@@ -101,7 +135,7 @@ bool PinNumberEnter(ButtonRequestType type, bool isSendDone, const char* title, 
     msg_write(MessageType_MessageType_ButtonRequest, &resp);
 
     usbTiny(1);
-    bool result = PinNumberGet(title, pin);
+    bool result = PinNumberGet(title, pin, true);
     
     if(isSendDone){
         // Done
@@ -115,7 +149,7 @@ bool PinNumberEnter(ButtonRequestType type, bool isSendDone, const char* title, 
 //**********************************
 // 
 //**********************************
-static bool    PinNumberGet(const char* msg, char* chr)
+static bool    PinNumberGet(const char* msg, char* chr, bool isUsb)
 {
     bool isLcdNeedUpdate = true;
     int pinIndex = 0;
@@ -126,6 +160,7 @@ static bool    PinNumberGet(const char* msg, char* chr)
     const int ym = 23;
     const int y2 = 30;
     int blinkCounter = 0;
+    int blinkValue = (isUsb) ? 120000 : 200000;
 
     memzero(chr, MAX_PIN_LEN+1);
     chr[0] = '5';
@@ -133,16 +168,20 @@ static bool    PinNumberGet(const char* msg, char* chr)
     //! Timeout about 1 minute
     while(timeOutCounter++ < 60000000)
     {
-        usbPoll();
+        if(isUsb == true)
+        {
+            usbPoll();
 
-        if(msg_tiny_id == MessageType_MessageType_Cancel)
-        {
-            return false;
+            if(msg_tiny_id == MessageType_MessageType_Cancel)
+            {
+                return false;
+            }
+            else
+            {
+                msg_tiny_id = 0xFFFF;
+            }
         }
-        else
-        {
-            msg_tiny_id = 0xFFFF;
-        }
+
         
 
         if(isLcdNeedUpdate)
@@ -200,7 +239,9 @@ static bool    PinNumberGet(const char* msg, char* chr)
             oledHLine( OLED_HEIGHT-10);
             if(pinIndex == 0)
             {
-                oledDrawString(1, OLED_HEIGHT-8, "Cancel", FONT_STANDARD);
+                if(isUsb == true)
+                    oledDrawString(1, OLED_HEIGHT-8, "Cancel", FONT_STANDARD);
+
                 oledDrawString(OLED_WIDTH - 26, OLED_HEIGHT-8, "Next", FONT_STANDARD);
             }
             else if(pinIndex < 3 || chr[pinIndex] == ' ')
@@ -232,7 +273,8 @@ static bool    PinNumberGet(const char* msg, char* chr)
             oledRefresh();
         }
 
-        if( ++blinkCounter > 120000)
+
+        if( ++blinkCounter > blinkValue)
         {
             blinkCounter = 0;
             //! Invert(highlight) the current editing pin
@@ -280,17 +322,24 @@ static bool    PinNumberGet(const char* msg, char* chr)
         }
         else if( button.NoUp )
         {
+            isLcdNeedUpdate = true;
+            okProgressCounter = 0;
+            longPressCounter = 0;
+
             if(pinIndex == 0)
             {
-                return false;
+                if( isUsb == true)
+                {
+                    return false;
+                }
+                else
+                {
+                    continue;
+                }
             }
 
             chr[pinIndex--] = 0;
             chr[pinIndex] = 0;
-
-            isLcdNeedUpdate = true;
-            okProgressCounter = 0;
-            longPressCounter = 0;
         }
         else if(button.YesUp)
         {
