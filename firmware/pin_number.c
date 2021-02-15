@@ -94,13 +94,16 @@ bool PinNumberCheckNoUsb ( void )
 {
     static CONFIDENTIAL char pin[MAX_PIN_LEN+1] = {0,0,0,0,0,0,0,0,0,0};
 
+    // Return true if no pin
     if( config_hasPin() == false )
         return true;
 
+    // Return true if session was unlocked
     if (session_isUnlocked()) {
         return true;
     }
 
+    // Getting pin number without any USB activity
     PinNumberGet(_("Enter Pin"), pin, false);
 
     // Check entered pins
@@ -113,11 +116,10 @@ bool PinNumberCheckNoUsb ( void )
     }
     else
     {
-        // Config 
+        // Session is unlocked 
         return true;
     }
         
-
     return false;
 }
 //**********************************

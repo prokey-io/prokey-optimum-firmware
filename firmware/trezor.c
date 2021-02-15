@@ -161,6 +161,7 @@ int main(void)
 
   config_init();
 
+  // Check the pin number before initializing the USB
   while(PinNumberCheckNoUsb() == false);
 
   layoutHome();
