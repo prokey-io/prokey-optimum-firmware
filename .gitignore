@@ -7,3 +7,5 @@ build/
 *.o
 *.d
 *.a
+bl_data.h
+Pipfile.lock
