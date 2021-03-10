@@ -26,6 +26,7 @@ OBJS += signing.o
 OBJS += crypto.o
 OBJS += prokey_layout.o
 OBJS += prokey_recovery.o
+OBJS += pin_number.o
 
 OBJS += ../auth.o
 

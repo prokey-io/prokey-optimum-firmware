@@ -1,9 +1,11 @@
 [submodule "vendor/nanopb"]
 	path = vendor/nanopb
 	url = https://github.com/nanopb/nanopb.git
+	ignore = untracked
 [submodule "vendor/QR-Code-generator"]
 	path = vendor/QR-Code-generator
 	url = https://github.com/nayuki/QR-Code-generator.git
+	ignore = untracked
 [submodule "common/defs/ethereum/tokens"]
 	path = common/defs/ethereum/tokens
 	url = https://github.com/ethereum-lists/tokens.git

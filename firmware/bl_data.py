@@ -9,9 +9,6 @@ if len(data) > 65536:
 
 data += b'\x00' * (65536 - len(data))
 
-#h = sha256(sha256(data).digest()).digest()
-
-#bl_hash = ', '.join('0x%02x' % x for x in bytearray(h))
 bl_data = ', '.join('0x%02x' % x for x in bytearray(data))
 
 with open('bl_data.h', 'wt') as f:

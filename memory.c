@@ -26,7 +26,6 @@
 #define FLASH_OPTION_BYTES_2 (*(const uint64_t *)0x1FFFC008)
 
 void memory_protect(void) {
-  //return;
 #if MEMORY_PROTECT
   // Reference STM32F205 Flash programming manual revision 5
   // http://www.st.com/resource/en/programming_manual/cd00233952.pdf Section 2.6

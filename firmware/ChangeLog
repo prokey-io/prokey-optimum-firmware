@@ -1,3 +1,8 @@
+Version 1.9.0 [Feb 2021]
+* Pin on device
+* New features
+* New ETH tokens
+
 Version 1.8.1 [May 2019]
 * Fix fault when using the device with no PIN
 * Fix OMNI transactions parsing

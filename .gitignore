@@ -1,0 +1,11 @@
+build/
+*.hex
+*.img
+*.list
+*.log
+*.srec
+*.o
+*.d
+*.a
+bl_data.h
+Pipfile.lock

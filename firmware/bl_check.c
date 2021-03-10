@@ -27,7 +27,6 @@
 #include "buttons.h"
 
 void check_bootloader(void) {
-//#if MEMORY_PROTECT
 	if (is_mode_unprivileged()) {
 		return;
 	}
@@ -60,10 +59,7 @@ void check_bootloader(void) {
 
 	layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, _("Updating bootloader"), NULL, NULL, _("DO NOT UNPLUG"), _("YOUR Prokey!"), NULL);
 
-	// unlock sectors
-	// memory_write_unlock();
-
-	for (int tries = 0; tries < 10; tries++) {
+	for (int tries = 0; tries < 3; tries++) {
 		bool isOkay = true;
 		// replace bootloader
 		flash_unlock();
@@ -96,5 +92,4 @@ void check_bootloader(void) {
 	// show info and halt
 	layoutDialog(&bmp_icon_error, NULL, NULL, NULL, _("Can not update"), _("bootloader."), NULL, _("Unplug your Prokey"), _("contact our support."), NULL);
 	shutdown();
-//#endif
 }

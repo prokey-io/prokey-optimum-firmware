@@ -1,0 +1,24 @@
+{
+    "files.associations": {
+        "otg_fs.h": "c",
+        "rcc.h": "c",
+        "iwdg.h": "c",
+        "iwdg_common_all.h": "c",
+        "serialno.h": "c",
+        "spi_master.h": "c",
+        "aes.h": "c",
+        "hid.h": "c",
+        "messages.pb.h": "c",
+        "pb_encode.h": "c",
+        "*.tcc": "c",
+        "config.h": "c",
+        "bip32.h": "c",
+        "bootloader.h": "c",
+        "array": "c",
+        "istream": "c",
+        "ostream": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c"
+    },
+}
