@@ -226,7 +226,6 @@ void mpu_config_bootloader(void) {
 
 // Never use in bootloader! Disables access to PPB (including MPU, NVIC, SCB)
 void mpu_config_firmware(void) {
-  //return;
 #if MEMORY_PROTECT
   // Disable MPU
   MPU_CTRL = 0;
