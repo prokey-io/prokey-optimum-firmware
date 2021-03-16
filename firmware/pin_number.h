@@ -22,8 +22,16 @@
 #include <stdbool.h>
 #include "messages-common.pb.h"
 
+typedef enum _PinNumberStatusEnum
+{
+    PinNumberOk,
+    PinNumberCanceled,
+    PinNumberTimeout,
+    PinNumberWrong,
+} PinNumberStatus;
+
 bool            PinNumberCheck      ( bool used_cached );
-bool            PinNumberCheckNoUsb ( void );
-bool            PinNumberEnter      ( ButtonRequestType type, bool isSendDone, const char* title, char* pin);
+PinNumberStatus PinNumberCheckNoUsb ( void );
+PinNumberStatus PinNumberEnter      ( ButtonRequestType type, bool isSendDone, const char* title, char* pin);
 
 #endif // PIN_NUMBER_H

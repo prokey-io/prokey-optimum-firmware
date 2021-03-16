@@ -162,7 +162,30 @@ int main(void)
   config_init();
 
   // Check the pin number before initializing the USB
-  while(PinNumberCheckNoUsb() == false);
+  PinNumberStatus pinStatus = PinNumberOk;
+  bool isScreenSaver = false;
+  while (true)
+  {
+    if(isScreenSaver == false)
+    {
+      PinNumberStatus pinStatus = PinNumberCheckNoUsb();
+      if(pinStatus == PinNumberOk)
+      {
+        break;
+      }
+      else if(pinStatus == PinNumberTimeout)
+      {
+        layoutScreensaver();
+        isScreenSaver = true;
+      }
+    }
+    else
+    {
+      ButtonGet(BTN_ALL);
+      isScreenSaver = false;
+    }
+  }
+  
 
   layoutHome();
   usbInit();
