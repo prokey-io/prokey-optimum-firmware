@@ -12,7 +12,7 @@ endif
 
 OBJS += messages.o
 OBJS += config.o
-OBJS += trezor.o
+OBJS += main.o
 OBJS += pinmatrix.o
 OBJS += fsm.o
 OBJS += coins.o

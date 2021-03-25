@@ -39,51 +39,57 @@ bool PinNumberCheck ( bool use_cached )
 {
     static CONFIDENTIAL char pin[MAX_PIN_LEN+1] = {0,0,0,0,0,0,0,0,0,0};
 
-    if( config_hasPin() == false )
-        return true;
-
-    if (use_cached && session_isUnlocked()) {
+    // Return true if no pin
+    if( config_hasPin() == false ) 
+    {
         return true;
     }
 
+    // Return true if pin has already entered and session unlocked
+    if (use_cached && session_isUnlocked()) 
+    {
+        return true;
+    }
+
+    // Update UI
     ButtonRequest resp;
     memzero(&resp, sizeof(ButtonRequest));
     resp.has_code = true;
     resp.code = ButtonRequestType_ButtonRequest_EnterPinOnDevice;
+    
+    // Handle USB messages here
     usbTiny(1);
     msg_write(MessageType_MessageType_ButtonRequest, &resp);
 
-    bool result = PinNumberGet(_("Enter Pin"), pin, true);
+    // Get pin number on device
+    PinNumberStatus result = PinNumberGet(_("Enter Pin"), pin, true);
 
-    // Send Pin number done
+    // Send pin number done to UI
     PinNumberDone();
 
+    // USB back to normal
     usbTiny(0);
 
     // Get Pin number
-    if( result == false)
+    if(result == PinNumberCanceled)
     {
         // Canceled
         fsm_sendFailure(FailureType_Failure_PinCancelled, NULL);
         return false;
     }
     
-    // Check entered pins
-    if(config_unlock(pin) == false)
+    // Check entered pin
+    if(config_unlock(pin) == true) 
     {
-        // Wrong pin
-        layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
-        buttonUpdate();
-        ButtonGet(BTN_YES);
-        fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
-        usbPoll();
-    }
-    else
-    {
-        // Config 
         return true;
     }
-        
+
+    // Wrong pin
+    layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
+    buttonUpdate();
+    ButtonGet(BTN_YES);
+    fsm_sendFailure(FailureType_Failure_PinInvalid, NULL);
+    usbPoll();
 
     return false;
 }
@@ -96,10 +102,13 @@ PinNumberStatus PinNumberCheckNoUsb ( void )
 
     // Return true if no pin
     if( config_hasPin() == false )
+    {
         return PinNumberOk;
+    }
 
     // Return true if session was unlocked
-    if (session_isUnlocked()) {
+    if (session_isUnlocked()) 
+    {
         return PinNumberOk;
     }
 
@@ -111,49 +120,48 @@ PinNumberStatus PinNumberCheckNoUsb ( void )
     }
 
     // Check entered pins
-    if(config_unlock(pin) == false)
-    {
-        // Wrong pin
-        layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
-        buttonUpdate();
-        ButtonGet(BTN_YES);
+    if(config_unlock(pin) == true)
+        return PinNumberOk; // Session is unlocked 
 
-        return PinNumberWrong;
-    }
-    else
-    {
-        // Session is unlocked 
-        return PinNumberOk;
-    }
+    // Wrong pin
+    layoutDialog(&bmp_icon_error, NULL, "OK", NULL, NULL, "Pin Number is", "wrong.", NULL, NULL, NULL);
+    buttonUpdate();
+    ButtonGet(BTN_YES);
+
+    return PinNumberWrong;
 }
 //**********************************
 // 
 //**********************************
 PinNumberStatus PinNumberEnter(ButtonRequestType type, bool isSendDone, const char* title, char* pin)
 {
+    // Update UI
     ButtonRequest resp;
     memzero(&resp, sizeof(ButtonRequest));
     resp.has_code = true;
     resp.code = type;
-    
     msg_write(MessageType_MessageType_ButtonRequest, &resp);
 
+    // Handle USB messages here
     usbTiny(1);
     PinNumberStatus result = PinNumberGet(title, pin, true);
     
-    if(isSendDone){
+    if(isSendDone)
+    {
         // Done
         PinNumberDone();
     }
 
+    // USB back to normal
     usbTiny(0);
 
     return result;
 }
 //**********************************
-// 
+// Get pin number from user using device buttons
+// Entered pins will be shown on device LCD 
 //**********************************
-static PinNumberStatus    PinNumberGet(const char* msg, char* chr, bool isUsb)
+static PinNumberStatus PinNumberGet(const char* msg, char* chr, bool isUsb)
 {
     bool isLcdNeedUpdate = true;
     int pinIndex = 0;
@@ -386,7 +394,7 @@ static PinNumberStatus    PinNumberGet(const char* msg, char* chr, bool isUsb)
 //**********************************
 // Send Done to the UI
 //**********************************
-static void            PinNumberDone(void)
+static void PinNumberDone(void)
 {
     // Done, This message helps the UI to close any message boxes or modal
     ButtonRequest resp;

@@ -24,7 +24,7 @@
 #include "debug.h"
 #include "messages.h"
 #include "timer.h"
-#include "trezor.h"
+#include "main.h"
 #if U2F_ENABLED
 #include "u2f.h"
 #endif

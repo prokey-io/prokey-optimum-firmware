@@ -49,7 +49,7 @@
 #include "signing.h"
 #include "supervise.h"
 #include "transaction.h"
-#include "trezor.h"
+#include "main.h"
 #include "usb.h"
 #include "util.h"
 #include "pin_number.h"

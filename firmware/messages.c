@@ -24,7 +24,7 @@
 #include "gettext.h"
 #include "memzero.h"
 #include "messages.h"
-#include "trezor.h"
+#include "main.h"
 #include "util.h"
 
 #include "messages.pb.h"
