@@ -165,8 +165,8 @@ int main(void) {
 	// HW_UNIQUE_ID will be used in Authenticating
 	desig_get_unique_id(HW_UNIQUE_ID);
 	
-	// TODO: Some research on MPU
-	// mpu_config_bootloader();
+	// Enable MPU
+	mpu_config_bootloader();
 
 	AuthInit();
 
