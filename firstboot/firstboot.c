@@ -50,6 +50,7 @@ bool            IsBootloaderAvailable   (void);
 bool            IsFirmwareAvailable     (void);
 static void     JumpToApplication       (bool isFirmware);
 void            MpuConfigFirstboot      (void);
+void            MpuDisable              (void);
 
 int main()
 {
@@ -137,6 +138,8 @@ JumpToApplication ( bool isFirmware )
     if( isFirmware )
         address = MEM_MAP_APPLICATION_ADDRESS;
     
+    MpuDisable();
+    
     const vector_table_t *ivt = (vector_table_t*)address;
     SCB_VTOR = (uint32_t)ivt;  // Set vector table
     __asm__ volatile("msr msp, %0" ::"r"(ivt->initial_sp_value));
@@ -188,4 +191,15 @@ void MpuConfigFirstboot(void)
 
   __asm__ volatile("dsb");
   __asm__ volatile("isb");
+}
+//**************************************
+//
+//**************************************
+void MpuDisable ( void )
+{
+    // Disable MPU
+    MPU_CTRL = 0;
+
+    __asm__ volatile("dsb");
+    __asm__ volatile("isb");
 }
