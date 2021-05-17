@@ -61,6 +61,8 @@ static uint32_t flash_pos = 0, flash_len = 0;
 static char flash_state = STATE_READY;
 static uint8_t flash_anim = 0;
 static uint32_t stackPointer = 0;
+static uint32_t buttonsTestCounter = 0;
+static uint32_t buttonsTestThreshold = 4000000;
 
 aes_decrypt_ctx decCtx;
 
@@ -386,42 +388,48 @@ static void usbInit(void) {
   winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
 }
 
-static void checkButtons(void) {
-  static bool btn_left = false, btn_right = false, btn_final = false;
-  if (btn_final) {
-    return;
-  }
-  uint16_t state = gpio_port_read(BTN_PORT);
-  if ((state & (BTN_PIN_YES | BTN_PIN_NO)) != (BTN_PIN_YES | BTN_PIN_NO)) {
-    if ((state & BTN_PIN_NO) != BTN_PIN_NO) {
-      btn_left = true;
+static void testButtons(void)
+{
+  uint16_t key = gpio_port_read(BTN_PORT);
+
+  if((key & (BTN_PIN_YES | BTN_PIN_NO | BTN_PIN_DOWN | BTN_PIN_UP)) != (BTN_PIN_YES | BTN_PIN_NO | BTN_PIN_DOWN | BTN_PIN_UP))
+  {
+    if(buttonsTestCounter++ >= buttonsTestThreshold)
+    {
+      buttonsTestCounter = 0;
+      buttonsTestThreshold = 10000;
+
+      oledClear();
+      oledDrawString(0,0, "TEST BUTTONS", FONT_STANDARD);
+
+      key = gpio_port_read(BTN_PORT);
+
+      int x = 0;
+      if((key & BTN_PIN_NO) != BTN_PIN_NO)
+        x = 3;
+      else if((key & BTN_PIN_UP) != BTN_PIN_UP)
+        x = 50;
+      else if((key & BTN_PIN_DOWN) != BTN_PIN_DOWN)
+        x = 80;
+      else if((key & BTN_PIN_YES) != BTN_PIN_YES)
+        x = OLED_WIDTH - 10;
+
+      oledDrawString(x, OLED_HEIGHT - 8, "*", FONT_STANDARD);
+      oledRefresh();
     }
-    if ((state & BTN_PIN_YES) != BTN_PIN_YES) {
-      btn_right = true;
-    }
   }
-  if (btn_left) {
-    oledBox(0, 0, 3, 3, true);
-  }
-  if (btn_right) {
-    oledBox(OLED_WIDTH - 4, 0, OLED_WIDTH - 1, 3, true);
-  }
-  if (btn_left || btn_right) {
-    oledRefresh();
-  }
-  if (btn_left && btn_right) {
-    btn_final = true;
+  else
+  {
+    buttonsTestCounter = 0;
   }
 }
 
+
 void usbLoop(void) {
-  bool isFirmwarePresent = firmware_present();
   usbInit();
   for (;;) {
     usbd_poll(usbd_dev);
-    if (!isFirmwarePresent &&
-        (flash_state == STATE_READY || flash_state == STATE_OPEN)) {
-      checkButtons();
-    }
+    
+    testButtons();
   }
 }

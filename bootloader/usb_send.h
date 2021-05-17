@@ -58,14 +58,6 @@ static void sendMsgFailureWithReason(usbd_device *dev, uint8_t reason)
 static void send_msg_features(usbd_device *dev) {
   uint8_t response[64];
   memzero(response, sizeof(response));
-  // response: Features message (id 17), payload len 25
-  //           - vendor = "trezor.io"
-  //           - major_version = VERSION_MAJOR
-  //           - minor_version = VERSION_MINOR
-  //           - patch_version = VERSION_PATCH
-  //           - bootloader_mode = True
-  //           - firmware_present = True/False
-  //           - model = "1"
   memcpy(response,
          // header
          "?##"
