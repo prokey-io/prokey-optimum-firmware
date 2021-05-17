@@ -17,7 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "trezor.h"
+#include "main.h"
 #include "bitmaps.h"
 #include "bl_check.h"
 #include "buttons.h"
@@ -162,7 +162,29 @@ int main(void)
   config_init();
 
   // Check the pin number before initializing the USB
-  while(PinNumberCheckNoUsb() == false);
+  bool isScreenSaver = false;
+  while (true)
+  {
+    if(isScreenSaver == false)
+    {
+      PinNumberStatus pinStatus = PinNumberCheckNoUsb();
+      if(pinStatus == PinNumberOk)
+      {
+        break;
+      }
+      else if(pinStatus == PinNumberTimeout)
+      {
+        layoutScreensaver();
+        isScreenSaver = true;
+      }
+    }
+    else
+    {
+      ButtonGet(BTN_ALL);
+      isScreenSaver = false;
+    }
+  }
+  
 
   layoutHome();
   usbInit();

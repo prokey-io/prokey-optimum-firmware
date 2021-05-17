@@ -22,7 +22,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "trezor.h"
+#include "main.h"
 #include "u2f/u2f_hid.h"
 
 #define U2F_KEY_PATH 0x80553246

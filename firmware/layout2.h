@@ -24,7 +24,7 @@
 #include "bitmaps.h"
 #include "coins.h"
 #include "layout.h"
-#include "trezor.h"
+#include "main.h"
 
 #include "messages-bitcoin.pb.h"
 #include "messages-crypto.pb.h"

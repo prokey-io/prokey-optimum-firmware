@@ -41,7 +41,7 @@
 #include "sha2.h"
 #include "storage.h"
 #include "supervise.h"
-#include "trezor.h"
+#include "main.h"
 #include "u2f.h"
 #include "usb.h"
 #include "util.h"

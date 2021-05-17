@@ -31,7 +31,7 @@
 #include "memzero.h"
 #include "nist256p1.h"
 #include "rng.h"
-#include "trezor.h"
+#include "main.h"
 #include "usb.h"
 #include "util.h"
 

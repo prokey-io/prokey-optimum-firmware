@@ -19,7 +19,7 @@
 
 #include "debug.h"
 #include "oled.h"
-#include "trezor.h"
+#include "main.h"
 #include "util.h"
 
 #if DEBUG_LOG
