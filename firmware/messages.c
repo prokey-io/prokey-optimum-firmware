@@ -243,6 +243,10 @@ void MsgWriteOutRaw( const unsigned short msg_id, const unsigned char* data, con
 	msg_out_pad();
 }
 
+#if EMULATOR
+void MsgAuthenticate( const unsigned char* msg_in )
+{}
+#else
 void MsgAuthenticate( const unsigned char* msg_in )
 {
 	sAuthResponse ar;
@@ -262,6 +266,7 @@ void MsgAuthenticate( const unsigned char* msg_in )
 
 	MsgWriteOutRaw( 0xFFF1, ar.response, ar.len );
 }
+#endif
 
 void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
   static char read_state = READSTATE_IDLE;
