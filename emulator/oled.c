@@ -59,7 +59,7 @@ void oledInit(void) {
   int fullscreen = emulatorFullscreen();
 
   SDL_Window *window = SDL_CreateWindow(
-      "Trezor^emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+      "Prokey^emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
       OLED_WIDTH * scale, OLED_HEIGHT * scale,
       fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 
