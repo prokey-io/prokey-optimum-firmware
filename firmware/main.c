@@ -132,9 +132,11 @@ int main(void)
   oledInit();
   
   // TODO: Check First boot to update
+#if !EMULATOR  
   check_bootloader();
   
   setupApp();
+#endif
 
   if (!is_mode_unprivileged()) {
     collect_hw_entropy(true);

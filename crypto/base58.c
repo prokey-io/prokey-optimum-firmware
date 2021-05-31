@@ -31,6 +31,8 @@
 
 const char b58digits_ordered[] =
     "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const char b58digits_ripple[] =
+    "rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz";
 const int8_t b58digits_map[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -146,7 +148,9 @@ int b58check(const void *bin, size_t binsz, HasherType hasher_type,
   return binc[0];
 }
 
-bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
+bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz, 
+            const char* b58digits) 
+{
   const uint8_t *bin = data;
   int carry;
   ssize_t i, j, high, zcount = 0;
@@ -176,15 +180,17 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
 
   if (zcount) memset(b58, '1', zcount);
   for (i = zcount; j < (ssize_t)size; ++i, ++j)
-    b58[i] = b58digits_ordered[buf[j]];
+    b58[i] = b58digits[buf[j]];
   b58[i] = '\0';
   *b58sz = i + 1;
 
   return true;
 }
 
-int base58_encode_check(const uint8_t *data, int datalen,
-                        HasherType hasher_type, char *str, int strsize) {
+int base58_encode_check_common(const uint8_t *data, int datalen,
+                               HasherType hasher_type, char *str, int strsize,
+                               const char* b58digits)
+{
   if (datalen > 128) {
     return 0;
   }
@@ -193,9 +199,23 @@ int base58_encode_check(const uint8_t *data, int datalen,
   memcpy(buf, data, datalen);
   hasher_Raw(hasher_type, data, datalen, hash);
   size_t res = strsize;
-  bool success = b58enc(str, &res, buf, datalen + 4);
+  bool success = b58enc(str, &res, buf, datalen + 4, b58digits);
   memzero(buf, sizeof(buf));
   return success ? res : 0;
+}
+
+int base58_encode_check(const uint8_t *data, int datalen,
+                        HasherType hasher_type, char *str, int strsize) 
+{
+  return base58_encode_check_common(data, datalen, hasher_type, str, 
+                                    strsize, b58digits_ordered);
+}
+
+int base58_ripple_encode_check(const uint8_t *data, int len, 
+                               char *str, int strsize)
+{
+  return base58_encode_check_common(data, len, HASHER_SHA2D, str, 
+                                    strsize, b58digits_ripple);
 }
 
 int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data,

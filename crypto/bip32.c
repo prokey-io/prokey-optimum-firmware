@@ -718,6 +718,22 @@ int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key,
 }
 #endif
 
+// Extract Ripple address from public key
+void hdnode_get_ripple_address(const HDNode* node, char* address)
+{
+  if (node->public_key[0] != 0) return;
+
+  uint8_t buf_sha256[SHA256_DIGEST_LENGTH];
+  uint8_t buf_ripemd160[RIPEMD160_DIGEST_LENGTH];
+  sha256_Raw(node->public_key, sizeof(node->public_key), buf_sha256);
+  ripemd160(buf_sha256, SHA256_DIGEST_LENGTH, buf_ripemd160);
+
+  char buf[21];
+  buf[0] = 0; // 0 is 'r' (Ripple uses its own base58 alphabet)
+  memcpy(buf + 1, buf_ripemd160, RIPEMD160_DIGEST_LENGTH);
+  base58_ripple_encode_check(buf, sizeof(buf), address, sizeof(address));
+} 
+
 // msg is a data to be signed
 // msg_len is the message length
 int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len,
