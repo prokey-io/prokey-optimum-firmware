@@ -71,8 +71,6 @@ void onmessage(int fd, const unsigned char *msg, size_t size, int type)
     ws_msg_size = size;
     memcpy(ws_msg, msg, size);
 
-    ws_sendframe_bin(last_client_id, ws_msg,(uint64_t)(size + 1), false);
-
     free(cli);
 }
 
@@ -111,7 +109,7 @@ size_t emulatorWebSocketWrite(int iface, const void *buffer, size_t size)
 {
     if (last_client_id > 0)
     {
-        return ws_sendframe_txt(last_client_id, buffer, false);
+        return ws_sendframe_bin(last_client_id, buffer, size, false);
     }
     return 0;
 }
