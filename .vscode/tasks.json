@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build emulator",
+            "type": "shell",
+            "command": "pipenv run script/cibuild",
+            "options": {
+                "env": {
+                    "name": "EMULATOR",
+                    "value": "1"
+                }
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
