@@ -61,7 +61,7 @@ void oledInit(void) {
   SDL_Window *window = SDL_CreateWindow(
       "Prokey^emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
       OLED_WIDTH * scale, OLED_HEIGHT * scale,
-      fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+      fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0 | SDL_WINDOW_OPENGL );
 
   if (window == NULL) {
     fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
