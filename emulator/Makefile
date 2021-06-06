@@ -7,7 +7,6 @@ OBJS += memory.o
 OBJS += oled.o
 OBJS += rng.o
 OBJS += timer.o
-OBJS += udp.o
 OBJS += ws.o
 
 OBJS += strl.o
