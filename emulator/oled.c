@@ -136,5 +136,19 @@ void emulatorPoll(void) {
     if (event.type == SDL_QUIT) {
       exit(1);
     }
+    else if (event.type == SDL_WINDOWEVENT)
+    {      
+      switch (event.window.event)
+      {
+      case SDL_WINDOWEVENT_FOCUS_GAINED:
+      case SDL_WINDOWEVENT_MOVED:
+      case SDL_WINDOWEVENT_EXPOSED:
+        oledRefresh();
+        break;
+      
+      default:
+        break;
+      }      
+    }
   }
 }
