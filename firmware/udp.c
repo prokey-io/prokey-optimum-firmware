@@ -27,7 +27,7 @@
 
 static volatile char tiny = 0;
 
-void usbInit(void) { emulatorSocketInit(); }
+void usbInit(void) { emulatorWebSocketInit(); }
 
 #if DEBUG_LINK
 #define _ISDBG (((iface == 1) ? 'd' : 'n'))
@@ -41,7 +41,7 @@ void usbPoll(void) {
   static uint8_t buffer[64];
 
   int iface = 0;
-  if (emulatorSocketRead(&iface, buffer, sizeof(buffer)) > 0) {
+  if (emulatorWebSocketRead(&iface, buffer, sizeof(buffer)) > 0) {
     if (!tiny) {
       msg_read_common(_ISDBG, buffer, sizeof(buffer));
     } else {
@@ -51,13 +51,13 @@ void usbPoll(void) {
 
   const uint8_t *data = msg_out_data();
   if (data != NULL) {
-    emulatorSocketWrite(0, data, 64);
+    emulatorWebSocketWrite(0, data, 64);
   }
 
 #if DEBUG_LINK
   data = msg_debug_out_data();
   if (data != NULL) {
-    emulatorSocketWrite(1, data, 64);
+    emulatorWebSocketWrite(1, data, 64);
   }
 #endif
 }

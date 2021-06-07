@@ -8,6 +8,7 @@ else
 OBJS += usb.o
 OBJS += bl_check.o
 OBJS += otp.o
+OBJS += ../auth.o
 endif
 
 OBJS += messages.o
@@ -28,7 +29,6 @@ OBJS += prokey_layout.o
 OBJS += prokey_recovery.o
 OBJS += pin_number.o
 
-OBJS += ../auth.o
 
 ifneq ($(U2F_ENABLED),0)
 OBJS += u2f.o

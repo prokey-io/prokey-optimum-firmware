@@ -131,6 +131,7 @@ int main(void)
                                    // unpredictable stack protection check
   oledInit();
   
+#if !EMULATOR  
   // TODO: Check First boot to update
 #if !EMULATOR  
   check_bootloader();
@@ -156,7 +157,9 @@ int main(void)
   config_wipe();
 #endif
 
+#if !EMULATOR
   AuthInit();
+#endif
 
   oledDrawBitmap(40, 0, &bmp_logo64);
   oledRefresh();

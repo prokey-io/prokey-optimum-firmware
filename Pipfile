@@ -4,6 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+protobuf = "*"
+nanopb = "*"
+click = "*"
+trezor = "*"
+mako = "*"
+munch = "*"
 
 [dev-packages]
 
