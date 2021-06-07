@@ -133,7 +133,6 @@ int main(void)
   
 #if !EMULATOR  
   // TODO: Check First boot to update
-#if !EMULATOR  
   check_bootloader();
   
   setupApp();
