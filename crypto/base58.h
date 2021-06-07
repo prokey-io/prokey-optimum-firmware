@@ -43,7 +43,8 @@ int base58_ripple_encode_check(const uint8_t *data, int len,
 bool b58tobin(void *bin, size_t *binszp, const char *b58);
 int b58check(const void *bin, size_t binsz, HasherType hasher_type,
              const char *base58str);
-bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
+bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz,
+            const char* b58digits);
 
 #if USE_GRAPHENE
 int base58gph_encode_check(const uint8_t *data, int datalen, char *str,

@@ -11,7 +11,7 @@ void fsm_msgRippleGetAddress(RippleGetAddress* msg)
     hdnode_fill_public_key(node);
 
     resp->has_address = true;
-    hdnode_get_ripple_address(node, address);
+    hdnode_get_ripple_address(node, resp->address);
 
     if (msg->has_show_display && msg->show_display) 
     {
@@ -26,4 +26,14 @@ void fsm_msgRippleGetAddress(RippleGetAddress* msg)
 
     msg_write(MessageType_MessageType_RippleAddress, resp);
     layoutHome();
+}
+
+void fsm_msgRippleSignTx(RippleSignTx* msg)
+{
+
+}
+
+void fsm_msgRippleSignedTx(RippleSignedTx* msg)
+{
+
 }

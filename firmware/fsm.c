@@ -59,6 +59,7 @@
 #include "lisk.h"
 #include "nem.h"
 #include "nem2.h"
+#include "ripple.h"
 #include "stellar.h"
 #endif
 
