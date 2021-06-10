@@ -178,7 +178,7 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz,
     return false;
   }
 
-  if (zcount) memset(b58, '1', zcount);
+  if (zcount) memset(b58, b58digits[0], zcount);
   for (i = zcount; j < (ssize_t)size; ++i, ++j)
     b58[i] = b58digits[buf[j]];
   b58[i] = '\0';

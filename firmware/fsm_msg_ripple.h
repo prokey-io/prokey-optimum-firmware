@@ -11,7 +11,7 @@ void fsm_msgRippleGetAddress(RippleGetAddress* msg)
     hdnode_fill_public_key(node);
 
     resp->has_address = true;
-    hdnode_get_ripple_address(node, resp->address);
+    hdnode_get_ripple_address(node, resp->address, sizeof(resp->address));
 
     if (msg->has_show_display && msg->show_display) 
     {
