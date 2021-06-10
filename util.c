@@ -83,6 +83,9 @@ uint32_t readprotobufint(const uint8_t **ptr) {
   return result;
 }
 
+#if EMULATOR
+void DeviceReset(bool isRunBootloader) {}
+#else
 void __attribute__((noreturn)) DeviceReset( bool isRunBootloader )
 {
 	(void)isRunBootloader;
@@ -103,3 +106,4 @@ void __attribute__((noreturn)) DeviceReset( bool isRunBootloader )
 
 	while(true);
 }
+#endif

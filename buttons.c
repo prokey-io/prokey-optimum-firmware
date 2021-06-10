@@ -140,7 +140,9 @@ eButtons	ButtonGet	( eButtons expected )
 {
 	while(true)
 	{
+		#if !EMULATOR
 		delay(100000);
+		#endif
 		buttonUpdate();
 
 		eButtons b = BTN_NONE;

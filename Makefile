@@ -8,12 +8,12 @@ OBJS += flash.o
 OBJS += layout.o
 OBJS += oled.o
 OBJS += rng.o
-OBJS += serialno.o
-OBJS += auth.o
 
 
 ifneq ($(EMULATOR),1)
 OBJS += setup.o
+OBJS += serialno.o
+OBJS += auth.o
 endif
 
 OBJS += util.o

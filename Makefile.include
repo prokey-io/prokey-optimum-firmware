@@ -15,7 +15,7 @@ OBJDUMP  := objdump
 AR       := ar
 AS       := as
 
-OPTFLAGS ?= -O3
+OPTFLAGS ?= 
 DBGFLAGS ?= -g3 -ggdb3
 CPUFLAGS ?=
 FPUFLAGS ?=
@@ -85,10 +85,10 @@ CFLAGS   += -DEMULATOR=1
 CFLAGS   += -include $(TOP_DIR)emulator/emulator.h
 CFLAGS   += -include stdio.h
 
-LDFLAGS  += -L$(TOP_DIR)emulator
+LDFLAGS  += -L$(TOP_DIR)emulator -L$(TOP_DIR)emulator/wsServer
 
-LDLIBS   += -ltrezor -lemulator
-LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
+LDLIBS   += -ltrezor -lemulator -lws -lpthread
+LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/wsServer/libws.a $(TOP_DIR)emulator/libemulator.a
 
 ifeq ($(HEADLESS),1)
 CFLAGS   += -DHEADLESS=1

@@ -131,10 +131,12 @@ int main(void)
                                    // unpredictable stack protection check
   oledInit();
   
+#if !EMULATOR  
   // TODO: Check First boot to update
   check_bootloader();
   
   setupApp();
+#endif
 
   if (!is_mode_unprivileged()) {
     collect_hw_entropy(true);
@@ -154,7 +156,9 @@ int main(void)
   config_wipe();
 #endif
 
+#if !EMULATOR
   AuthInit();
+#endif
 
   oledDrawBitmap(40, 0, &bmp_logo64);
   oledRefresh();
