@@ -32,8 +32,3 @@ void fsm_msgRippleSignTx(RippleSignTx* msg)
 {
 
 }
-
-void fsm_msgRippleSignedTx(RippleSignedTx* msg)
-{
-
-}
