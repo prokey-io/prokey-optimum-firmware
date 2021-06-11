@@ -25,6 +25,7 @@
         "messages_map.h": "c",
         "fsm.h": "c",
         "base58.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "layout.h": "c"
     },
 }

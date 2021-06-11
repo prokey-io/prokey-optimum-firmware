@@ -958,3 +958,19 @@ void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), desc, str[0],
                     str[1], str[2], str[3], NULL, NULL);
 }
+
+// Ripple layouts
+void layoutRippleConfirmDestinationTag(uint32_t tag)
+{
+
+}
+
+void layoutRippleConfirmFee(uint64_t fee)
+{
+
+}
+
+void layoutRippleConfirmTx(uint64_t amount, char* to)
+{
+
+}
