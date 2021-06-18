@@ -1,17 +1,14 @@
 /*
  * PROKEY HARDWARE WALLET
  * Copyright (C) Prokey.io
-
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
-
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -21,6 +18,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "wsServer/include/ws.h"
+#include <string.h>
 
 static int last_client_id = 0;
 static unsigned char ws_msg[1024];
@@ -62,6 +60,7 @@ void onclose(int fd)
  */
 void onmessage(int fd, const unsigned char *msg, size_t size, int type)
 {
+    (void)type;
     char *cli;
     cli = ws_getaddress(fd);
     printf("I receive a message: %s (%zu), from: %s/%d\n", msg,
@@ -76,6 +75,7 @@ void onmessage(int fd, const unsigned char *msg, size_t size, int type)
 
 static void* WebSocketThread(void* _user_data)
 {
+    (void)_user_data;
     /* Register events. */
     struct ws_events evs;
     evs.onopen    = &onopen;
@@ -84,6 +84,8 @@ static void* WebSocketThread(void* _user_data)
 
     /* Main loop, this function never returns. */
     ws_socket(&evs, 55500);    
+
+    return NULL;
 }
 
 void emulatorWebSocketInit(void)
@@ -94,6 +96,7 @@ void emulatorWebSocketInit(void)
 
 size_t emulatorWebSocketRead(int *iface, void *buffer, size_t size)
 {
+    (void)size;
     *iface = 0;
     if (ws_msg_size > 0)
     {
@@ -107,6 +110,7 @@ size_t emulatorWebSocketRead(int *iface, void *buffer, size_t size)
 
 size_t emulatorWebSocketWrite(int iface, const void *buffer, size_t size)
 {
+    (void)iface;
     if (last_client_id > 0)
     {
         return ws_sendframe_bin(last_client_id, buffer, size, false);
