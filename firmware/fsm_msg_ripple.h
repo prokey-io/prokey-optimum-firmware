@@ -283,6 +283,7 @@ void fsm_msgRippleSignTx(RippleSignTx *msg)
         if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmWord, false))
         {
             fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+            layoutHome();
             return;
         }
     }
@@ -290,12 +291,14 @@ void fsm_msgRippleSignTx(RippleSignTx *msg)
     if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false))
     {
         fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        layoutHome();
         return;
     }
     layoutRippleConfirmTx(msg->payment.amount, msg->payment.destination);
     if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false))
     {
         fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        layoutHome();
         return;
     }
 
