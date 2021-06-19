@@ -30,19 +30,21 @@
 #include "options.h"
 
 extern const char b58digits_ordered[];
-extern const int8_t b58digits_map[];
+extern const int8_t b58digits_map_btc[];
 
 int base58_encode_check(const uint8_t *data, int len, HasherType hasher_type,
                         char *str, int strsize);
 int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data,
                         int datalen);
+int base58_decode_check_ripple(const char *str, uint8_t *data,
+                        int datalen);                        
 int base58_ripple_encode_check(const uint8_t *data, int len,
                         char *str, int strsize);
 
 // Private
-bool b58tobin(void *bin, size_t *binszp, const char *b58);
+bool b58tobin(void *bin, size_t *binszp, const char *b58, int8_t* b58digits_map, char zero_char);
 int b58check(const void *bin, size_t binsz, HasherType hasher_type,
-             const char *base58str);
+             const char *base58str, char zero_char);
 bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz,
             const char* b58digits);
 
