@@ -49,7 +49,7 @@ void fsm_msgRippleGetAddress(RippleGetAddress *msg)
         strlcpy(desc, "Address:", sizeof(desc));
 
         if (!fsm_layoutAddress(resp->address, desc, false, 0, msg->address_n,
-                               msg->address_n_count, true))
+                               msg->address_n_count, false))
         {
             return;
         }
