@@ -988,13 +988,9 @@ void layoutRippleConfirmFee(uint64_t fee)
 void layoutRippleConfirmTx(uint64_t amount, char* to)
 {
   char* title = "Confirm sending";
-  char amountstr[32];
+  char amountstr[36];
   bn_format_uint64(amount, NULL, " XRP", 6, 0, false, 
                    amountstr, sizeof(amountstr));
-  char to_msg[36];
-  sprintf(to_msg, "%s to", amountstr);
-  const char** str = split_message((uint8_t*)to, strlen(to), 12);
-  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), 
-                    title, to_msg,
-                    str[0], str[1], str[2], NULL, NULL);  
+  strlcat(amountstr, " to", sizeof(amountstr));
+  render_address_dialog(NULL, to, title, amountstr, NULL);
 }
