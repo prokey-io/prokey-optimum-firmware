@@ -234,7 +234,7 @@ void fsm_msgRippleSignTx(RippleSignTx *msg)
     CHECK_PARAM(msg->fee <= MAX_RIPPLE_FEE,
                 "Transaction fee is too high must be less than 1 XRP");
     CHECK_PARAM(msg->has_sequence,
-                "Transaction squence is missing");
+                "Transaction sequence is missing");
     CHECK_PARAM(msg->has_payment,
                 "Transaction payment is missing");
     CHECK_PARAM(msg->payment.has_amount,
