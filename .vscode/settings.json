@@ -19,6 +19,13 @@
         "ostream": "c",
         "tuple": "c",
         "type_traits": "c",
-        "utility": "c"
+        "utility": "c",
+        "stellar.h": "c",
+        "ethereum.h": "c",
+        "messages_map.h": "c",
+        "fsm.h": "c",
+        "base58.h": "c",
+        "types.h": "c",
+        "layout.h": "c"
     },
 }

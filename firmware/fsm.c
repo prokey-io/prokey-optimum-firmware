@@ -59,6 +59,7 @@
 #include "lisk.h"
 #include "nem.h"
 #include "nem2.h"
+#include "ripple.h"
 #include "stellar.h"
 #endif
 
@@ -265,5 +266,6 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
 #include "fsm_msg_lisk.h"
 #include "fsm_msg_nem.h"
 #include "fsm_msg_stellar.h"
+#include "fsm_msg_ripple.h"
 
 #endif

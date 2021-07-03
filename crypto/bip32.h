@@ -115,6 +115,8 @@ int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key,
                        size_t size, uint8_t *buffer);
 #endif
 
+void hdnode_get_ripple_address(const HDNode* node, char* address, uint32_t address_size);
+
 int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len,
                 HasherType hasher_sign, uint8_t *sig, uint8_t *pby,
                 int (*is_canonical)(uint8_t by, uint8_t sig[64]));

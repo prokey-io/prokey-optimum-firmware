@@ -57,6 +57,7 @@ void	ProkeyMenu	( void )
 	}
 
 	// if homescreen is shown for too long
+#if !EMULATOR  
 	if (layoutLast == layoutHome) 
 	{
 		if ((timer_ms() - system_millis_lock_start) >= config_getAutoLockDelayMs()) 
@@ -67,6 +68,7 @@ void	ProkeyMenu	( void )
 			return;
 		}
 	}
+#endif
 	
 	if( layoutLast == layoutHome )
 	{

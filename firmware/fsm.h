@@ -27,6 +27,7 @@
 #include "messages-lisk.pb.h"
 #include "messages-management.pb.h"
 #include "messages-nem.pb.h"
+#include "messages-ripple.pb.h"
 #include "messages-stellar.pb.h"
 
 // message functions
@@ -117,6 +118,11 @@ void fsm_msgNEMSignTx(
     NEMSignTx *msg);  // not const because we mutate msg->network
 void fsm_msgNEMDecryptMessage(
     NEMDecryptMessage *msg);  // not const because we mutate msg->payload
+
+// ripple
+void fsm_msgRippleGetAddress(RippleGetAddress* msg);
+void fsm_msgRippleSignTx(RippleSignTx* msg);
+void fsm_msgRippleSignedTx(RippleSignedTx* msg);
 
 // stellar
 void fsm_msgStellarGetAddress(const StellarGetAddress *msg);

@@ -34,6 +34,10 @@
 #include "buttons.h"
 #include "pin_number.h"
 
+#if EMULATOR
+#include <SDL2/SDL.h>                    
+#endif
+
 /* number of words expected in the new seed */
 static uint32_t wordCount = 0;
 
@@ -131,6 +135,9 @@ void ProRecovery( char isOnlyCheck )
                     oledRefresh();
 
                     buttonUpdate();
+#if EMULATOR
+                    SDL_Delay(100);                    
+#endif
                     if( (button.DownDown > 10 || button.DownUp) && itemCounter < foundedWords - 1)
                     {
                         itemCounter++;
@@ -331,6 +338,9 @@ char ProRecoveryGetChar( char* chr )
     while (true)
     {
         buttonUpdate();
+#if EMULATOR
+        SDL_Delay(100);                    
+#endif
 
         if( button.DownUp || button.DownDown > 5 ){
             if( chr[n] == ' ')

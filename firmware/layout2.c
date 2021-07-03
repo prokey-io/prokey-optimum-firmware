@@ -54,6 +54,8 @@ static const char *slip44_extras(uint32_t coin_type) {
       return "UBQ";  // UBIQ
     case 137:
       return "RSK";  // Rootstock Mainnet
+    case 144:
+      return "XRP";  // Ripple and Ripple testnet
     case 37310:
       return "tRSK";  // Rootstock Testnet
   }
@@ -957,4 +959,38 @@ void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
   }
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), desc, str[0],
                     str[1], str[2], str[3], NULL, NULL);
+}
+
+// Ripple layouts
+void layoutRippleConfirmDestinationTag(uint32_t tag)
+{
+  char* title = "Confirm tag";
+  char* desc = "Destination tag:";
+  char tagstr[12];
+  sprintf(tagstr, "%d", tag);
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), 
+                    title, desc,
+                    tagstr, NULL, NULL, NULL, NULL);  
+}
+
+void layoutRippleConfirmFee(uint64_t fee)
+{
+  char* title = "Confirm fee";
+  char* desc = "Transaction fee:";
+  char feestr[32];
+  bn_format_uint64(fee, NULL, " XRP", 6, 0, false, 
+                   feestr, sizeof(feestr));
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), 
+                    title, desc,
+                    feestr, NULL, NULL, NULL, NULL);  
+}
+
+void layoutRippleConfirmTx(uint64_t amount, char* to)
+{
+  char* title = "Confirm sending";
+  char amountstr[36];
+  bn_format_uint64(amount, NULL, " XRP", 6, 0, false, 
+                   amountstr, sizeof(amountstr));
+  strlcat(amountstr, " to", sizeof(amountstr));
+  render_address_dialog(NULL, to, title, amountstr, NULL);
 }

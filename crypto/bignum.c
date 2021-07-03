@@ -3,6 +3,7 @@
  * Copyright (c) 2013-2014 Pavol Rusnak
  * Copyright (c)      2015 Jochen Hoenicke
  * Copyright (c)      2016 Alex Beregszaszi
+ * Copyright (c)      2021 Ali Akbar Mohammadi
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -64,6 +65,24 @@ inline void write_be(uint8_t *data, uint32_t x) {
   data[1] = x >> 16;
   data[2] = x >> 8;
   data[3] = x;
+}
+
+inline void write_be_16(uint8_t *data, uint16_t x) 
+{
+  data[0] = x >> 8;
+  data[1] = x;
+}
+
+inline void write_be_64(uint8_t *data, uint64_t x)
+{
+  data[0] = x >> 56;
+  data[1] = x >> 48;
+  data[2] = x >> 40;
+  data[3] = x >> 32;
+  data[4] = x >> 24;
+  data[5] = x >> 16;
+  data[6] = x >> 8;
+  data[7] = x;
 }
 
 inline uint32_t read_le(const uint8_t *data) {

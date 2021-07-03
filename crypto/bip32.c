@@ -36,6 +36,7 @@
 #include "ed25519-donna/ed25519.h"
 #include "hmac.h"
 #include "nist256p1.h"
+#include "ripemd160.h"
 #include "secp256k1.h"
 #include "sha2.h"
 #include "sha3.h"
@@ -717,6 +718,20 @@ int hdnode_nem_decrypt(const HDNode *node, const ed25519_public_key public_key,
   return 1;
 }
 #endif
+
+// Extract Ripple address from public key
+void hdnode_get_ripple_address(const HDNode* node, char* address, uint32_t address_size)
+{
+  uint8_t buf_sha256[SHA256_DIGEST_LENGTH];
+  uint8_t buf_ripemd160[RIPEMD160_DIGEST_LENGTH];
+  sha256_Raw(node->public_key, sizeof(node->public_key), buf_sha256);
+  ripemd160(buf_sha256, SHA256_DIGEST_LENGTH, buf_ripemd160);
+
+  uint8_t buf[21];
+  buf[0] = 0; // 0 is 'r' (Ripple uses its own base58 alphabet)
+  memcpy(buf + 1, buf_ripemd160, RIPEMD160_DIGEST_LENGTH);
+  base58_ripple_encode_check(buf, sizeof(buf), address, address_size);
+} 
 
 // msg is a data to be signed
 // msg_len is the message length

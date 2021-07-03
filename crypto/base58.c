@@ -31,7 +31,9 @@
 
 const char b58digits_ordered[] =
     "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-const int8_t b58digits_map[] = {
+const char b58digits_ripple[] =
+    "rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz";
+const int8_t b58digits_map_btc[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,
@@ -40,8 +42,17 @@ const int8_t b58digits_map[] = {
     -1, -1, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, -1, 44, 45, 46, 47, 48,
     49, 50, 51, 52, 53, 54, 55, 56, 57, -1, -1, -1, -1, -1,
 };
+const int8_t b58digits_map_ripple[] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 50, 33,  7, 21, 41, 40, 27, 45,
+    8,  -1, -1, -1, -1, -1, -1, -1, 54, 10, 38, 12, 14, 47, 15, 16, -1, 17, 18,
+    19, 20, 13, -1, 22, 23, 24, 25, 26, 11, 28, 29, 30, 31, 32, -1, -1, -1, -1,
+    -1, -1,  5, 34, 35, 36, 37,  6, 39,  3, 49, 42, 43, -1, 44,  4, 46,  1, 48,
+     0,  2, 51, 52, 53,  9, 55, 56, 57, -1, -1, -1, -1, -1,
+};
 
-bool b58tobin(void *bin, size_t *binszp, const char *b58) {
+bool b58tobin(void *bin, size_t *binszp, const char *b58, int8_t* b58digits_map, char zero_char) {
   size_t binsz = *binszp;
 
   if (binsz == 0) {
@@ -65,7 +76,7 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
   memzero(outi, sizeof(outi));
 
   // Leading zeros, just count
-  for (i = 0; i < b58sz && b58u[i] == '1'; ++i) ++zerocount;
+  for (i = 0; i < b58sz && b58u[i] == zero_char; ++i) ++zerocount;
 
   for (; i < b58sz; ++i) {
     if (b58u[i] & 0x80)
@@ -129,7 +140,7 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
 }
 
 int b58check(const void *bin, size_t binsz, HasherType hasher_type,
-             const char *base58str) {
+             const char *base58str, char zero_char) {
   unsigned char buf[32];
   const uint8_t *binc = bin;
   unsigned i;
@@ -139,14 +150,16 @@ int b58check(const void *bin, size_t binsz, HasherType hasher_type,
 
   // Check number of zeros is correct AFTER verifying checksum (to avoid
   // possibility of accessing base58str beyond the end)
-  for (i = 0; binc[i] == '\0' && base58str[i] == '1'; ++i) {
+  for (i = 0; binc[i] == '\0' && base58str[i] == zero_char; ++i) {
   }  // Just finding the end of zeros, nothing to do in loop
-  if (binc[i] == '\0' || base58str[i] == '1') return -3;
+  if (binc[i] == '\0' || base58str[i] == zero_char) return -3;
 
   return binc[0];
 }
 
-bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
+bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz, 
+            const char* b58digits) 
+{
   const uint8_t *bin = data;
   int carry;
   ssize_t i, j, high, zcount = 0;
@@ -174,17 +187,19 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
     return false;
   }
 
-  if (zcount) memset(b58, '1', zcount);
+  if (zcount) memset(b58, b58digits[0], zcount);
   for (i = zcount; j < (ssize_t)size; ++i, ++j)
-    b58[i] = b58digits_ordered[buf[j]];
+    b58[i] = b58digits[buf[j]];
   b58[i] = '\0';
   *b58sz = i + 1;
 
   return true;
 }
 
-int base58_encode_check(const uint8_t *data, int datalen,
-                        HasherType hasher_type, char *str, int strsize) {
+int base58_encode_check_common(const uint8_t *data, int datalen,
+                               HasherType hasher_type, char *str, int strsize,
+                               const char* b58digits)
+{
   if (datalen > 128) {
     return 0;
   }
@@ -193,27 +208,54 @@ int base58_encode_check(const uint8_t *data, int datalen,
   memcpy(buf, data, datalen);
   hasher_Raw(hasher_type, data, datalen, hash);
   size_t res = strsize;
-  bool success = b58enc(str, &res, buf, datalen + 4);
+  bool success = b58enc(str, &res, buf, datalen + 4, b58digits);
   memzero(buf, sizeof(buf));
   return success ? res : 0;
 }
 
-int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data,
-                        int datalen) {
+int base58_encode_check(const uint8_t *data, int datalen,
+                        HasherType hasher_type, char *str, int strsize) 
+{
+  return base58_encode_check_common(data, datalen, hasher_type, str, 
+                                    strsize, b58digits_ordered);
+}
+
+int base58_ripple_encode_check(const uint8_t *data, int len, 
+                               char *str, int strsize)
+{
+  return base58_encode_check_common(data, len, HASHER_SHA2D, str, 
+                                    strsize, b58digits_ripple);
+}
+
+int base58_decode_check_common(const char *str, HasherType hasher_type, uint8_t *data,
+                               int datalen, int8_t* b58digits_map, char zero_char) 
+{
   if (datalen > 128) {
     return 0;
   }
   uint8_t d[datalen + 4];
   size_t res = datalen + 4;
-  if (b58tobin(d, &res, str) != true) {
+  if (b58tobin(d, &res, str, b58digits_map, zero_char) != true) {
     return 0;
   }
   uint8_t *nd = d + datalen + 4 - res;
-  if (b58check(nd, res, hasher_type, str) < 0) {
+  if (b58check(nd, res, hasher_type, str, zero_char) < 0) {
     return 0;
   }
   memcpy(data, nd, res - 4);
   return res - 4;
+}
+
+int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data,
+                        int datalen) 
+{
+  return base58_decode_check_common(str, hasher_type, data, datalen, b58digits_map_btc, b58digits_ordered[0]);
+}
+
+int base58_decode_check_ripple(const char *str, uint8_t *data,
+                        int datalen) 
+{
+  return base58_decode_check_common(str, HASHER_SHA2D, data, datalen, b58digits_map_ripple, b58digits_ripple[0]);
 }
 
 #if USE_GRAPHENE

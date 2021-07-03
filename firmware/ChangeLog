@@ -1,3 +1,8 @@
+Version 1.10.1 [Jun 2021]
+* Add Support for Ripple
+* Add websocket to emulator
+* Improve emulator
+
 Version 1.9.1 [Mar 2021]
 * Fix Pin on device timeout
 

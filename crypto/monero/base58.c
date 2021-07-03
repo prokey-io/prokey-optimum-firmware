@@ -43,7 +43,7 @@ const size_t full_block_size = sizeof(encoded_block_sizes) / sizeof(encoded_bloc
 const size_t full_encoded_block_size = 11; // encoded_block_sizes[full_block_size];
 const size_t addr_checksum_size = 4;
 const int decoded_block_sizes[] = {0, -1, 1, 2, -1, 3, 4, 5, -1, 6, 7, 8};
-#define reverse_alphabet(letter) ((int8_t) b58digits_map[(int)letter])
+#define reverse_alphabet(letter) ((int8_t) b58digits_map_btc[(int)letter])
 
 
 uint64_t uint_8be_to_64(const uint8_t* data, size_t size)
