@@ -1,5 +1,5 @@
 TronGetAddress.address_n                            max_count:8
 
-TronAddress.address                                 max_size:22
+TronAddress.address                                 max_size:36
 
 TronSignTx.address_n                                max_count:8

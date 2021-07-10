@@ -29,6 +29,7 @@
 #include "messages-nem.pb.h"
 #include "messages-ripple.pb.h"
 #include "messages-stellar.pb.h"
+#include "messages-tron.pb.h"
 
 // message functions
 
@@ -122,7 +123,6 @@ void fsm_msgNEMDecryptMessage(
 // ripple
 void fsm_msgRippleGetAddress(RippleGetAddress* msg);
 void fsm_msgRippleSignTx(RippleSignTx* msg);
-void fsm_msgRippleSignedTx(RippleSignedTx* msg);
 
 // stellar
 void fsm_msgStellarGetAddress(const StellarGetAddress *msg);
@@ -138,5 +138,9 @@ void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg);
 void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg);
 void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg);
 void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg);
+
+// Tron
+void fsm_msgTronGetAddress(TronGetAddress* msg);
+void fsm_msgTronSignTx(TronSignTx* msg);
 
 #endif

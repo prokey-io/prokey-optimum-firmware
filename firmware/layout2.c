@@ -56,6 +56,8 @@ static const char *slip44_extras(uint32_t coin_type) {
       return "RSK";  // Rootstock Mainnet
     case 144:
       return "XRP";  // Ripple and Ripple testnet
+    case 195:
+      return "TRX"; // TRON
     case 37310:
       return "tRSK";  // Rootstock Testnet
   }

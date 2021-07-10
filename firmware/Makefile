@@ -115,6 +115,7 @@ OBJS += protob/messages-lisk.pb.o
 OBJS += protob/messages-nem.pb.o
 OBJS += protob/messages-ripple.pb.o
 OBJS += protob/messages-stellar.pb.o
+OBJS += protob/messages-tron.pb.o
 endif
 
 OPTFLAGS ?= -Os

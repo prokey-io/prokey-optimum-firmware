@@ -32,14 +32,13 @@ void fsm_msgRippleGetAddress(RippleGetAddress *msg)
     CHECK_INITIALIZED
     CHECK_PIN
 
-    RESP_INIT(RippleAddress);
-
     HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
                                       msg->address_n_count, NULL);
     if (!node)
         return;
     hdnode_fill_public_key(node);
 
+    RESP_INIT(RippleAddress);
     resp->has_address = true;
     hdnode_get_ripple_address(node, resp->address, sizeof(resp->address));
 
