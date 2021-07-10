@@ -2,6 +2,7 @@
  * This file is part of the TREZOR project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
+ * Copyright (C) 2021 Ali Akbar Mohammadi
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -30,6 +31,7 @@
 #include "messages-ripple.pb.h"
 #include "messages-stellar.pb.h"
 #include "messages-tron.pb.h"
+#include "bip32.h"
 
 // message functions
 
@@ -67,6 +69,9 @@ void fsm_msgApplyFlags(const ApplyFlags *msg);
 void fsm_msgRecoveryDevice(const RecoveryDevice *msg);
 void fsm_msgWordAck(const WordAck *msg);
 void fsm_msgSetU2FCounter(const SetU2FCounter *msg);
+HDNode *fsm_getDerivedNode(const char *curve, const uint32_t *address_n,
+                                  size_t address_n_count,
+                                  uint32_t *fingerprint);
 
 // coin
 void fsm_msgGetPublicKey(const GetPublicKey *msg);

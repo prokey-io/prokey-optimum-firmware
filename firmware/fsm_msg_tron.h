@@ -17,28 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-static const int8_t tron_prefix = 0x41; // Tron addresses must start with T
-
 void fsm_msgTronGetAddress(TronGetAddress* msg)
 {
     CHECK_INITIALIZED
     CHECK_PIN
 
-    HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
-                                      msg->address_n_count, NULL);
-    if (!node)
-        return;
-    hdnode_fill_public_key(node);
-
     RESP_INIT(TronAddress);
     resp->has_address = true;
-    uint8_t hash[SHA3_256_DIGEST_LENGTH];
-    keccak_256(node->public_key, sizeof(node->public_key), hash);
-    uint8_t key[21];
-    key[0] = tron_prefix;  
-    // copy last 20 bytes of hash
-    memcpy(key + 1, hash + (SHA3_256_DIGEST_LENGTH - 21), 20);
-    base58_encode_check(key, sizeof(key), HASHER_SHA2D, resp->address, sizeof(resp->address));
+    tron_getAddress(msg->address_n, msg->address_n_count, resp->address, sizeof(resp->address));
 
     if (msg->has_show_display && msg->show_display)
     {
@@ -58,5 +44,11 @@ void fsm_msgTronGetAddress(TronGetAddress* msg)
 
 void fsm_msgTronSignTx(TronSignTx* msg)
 {
+    CHECK_INITIALIZED
+    CHECK_PIN
 
+    if (!tron_signingInit(msg))
+    {
+        return;
+    }
 }

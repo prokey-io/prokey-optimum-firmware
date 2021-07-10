@@ -41,6 +41,7 @@ OBJS += lisk.o
 OBJS += nem2.o
 OBJS += nem_mosaics.o
 OBJS += stellar.o
+OBJS += tron.o
 endif
 
 OBJS += debug.o
