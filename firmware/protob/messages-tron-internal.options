@@ -1,1 +1,7 @@
-rawTr.contract                              max_count: 1
+Any.type_url                                max_size:64
+Any.value                                   max_size:1024
+
+rawTr.contract                              max_count:1
+
+TransferContract.owner_address              max_size:21
+TransferContract.to_address                 max_size:21

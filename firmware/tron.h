@@ -24,7 +24,7 @@
 #include "fsm.h"
 
 // Get tron address
-void tron_getAddress(uint32_t* address_n, uint32_t address_n_count, 
+void tron_getAddress(const uint32_t* address_n, uint32_t address_n_count, 
                      char* address, uint32_t address_len);
 
 bool tron_signingInit(const TronSignTx* msg);

@@ -49,19 +49,19 @@ message TronSignTx {
         }
         // Transfer TRX
         message TronTransferContract {
-            optional bytes to_address = 1;                      // To address - decoded base 58
+            optional string to_address = 1;                      // To address
             optional uint64 amount = 2;                         // TRX amount in sun (10^-6)
         }
         // Transfer asset
         message TronTransferAssetContract {
             optional string asset_name = 1;                     // Asset name
-            optional bytes to_address = 2;                      // To address - decoded base 58
+            optional string to_address = 2;                      // To address
             optional uint64 amount = 3;                         // Amount to transfer
         }
         // Vote witness
         message TronVoteWitnessContract {
             message TronVote {
-                optional bytes vote_address = 1;                // Candidate Address - decoded base 58
+                optional string vote_address = 1;                // Candidate Address
                 optional uint64 vote_count = 2;                 // Amount of votes
             }
             repeated TronVote votes = 1;                        // votes
@@ -93,7 +93,7 @@ message TronSignTx {
         }
         // Participate in an asset
         message TronParticipateAssetIssueContract {
-            optional bytes to_address = 1;                      // Asset issuer address - decoded base 58
+            optional string to_address = 1;                      // Asset issuer address
             optional string asset_name = 2;                     // The name of target asset
             optional uint64 amount = 3;                         // TRX amount in sun
         }
