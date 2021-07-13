@@ -27,6 +27,8 @@
         "base58.h": "c",
         "types.h": "c",
         "layout.h": "c",
-        "curves.h": "c"
+        "curves.h": "c",
+        "secp256k1.h": "c",
+        "ecdsa.h": "c"
     },
 }

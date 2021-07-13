@@ -23,16 +23,17 @@
 #include "messages-tron-internal.pb.h"
 #include "gettext.h"
 #include "pb_encode.h"
+#include "secp256k1.h"
 
 static const int8_t tron_prefix = 0x41; // Tron addresses must start with T
 
-void tron_getAddress(const uint32_t *address_n, uint32_t address_n_count,
+HDNode* tron_getAddress(const uint32_t *address_n, uint32_t address_n_count,
                      char *address, uint32_t address_len)
 {
     HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, address_n,
                                       address_n_count, NULL);
     if (!node)
-        return;
+        return NULL;
     hdnode_fill_public_key(node);
 
     uint8_t hash[SHA3_256_DIGEST_LENGTH];
@@ -42,6 +43,8 @@ void tron_getAddress(const uint32_t *address_n, uint32_t address_n_count,
     // copy last 20 bytes of hash
     memcpy(key + 1, hash + (SHA3_256_DIGEST_LENGTH - 21), 20);
     base58_encode_check(key, sizeof(key), HASHER_SHA2D, address, address_len);
+
+    return node;
 }
 
 // data must be 21 in length
@@ -109,7 +112,7 @@ bool tron_signingInit(const TronSignTx *msg)
 
     // Get the user address
     char owner_address[36];
-    tron_getAddress(msg->address_n, msg->address_n_count, owner_address, sizeof(owner_address));
+    HDNode* node = tron_getAddress(msg->address_n, msg->address_n_count, owner_address, sizeof(owner_address));
     uint8_t owner_address_decoded[21];
     if (!tron_decodeAddress(owner_address_decoded, sizeof(owner_address_decoded), owner_address))
         return tron_signingAbort("Cannot decode owner address");
@@ -162,14 +165,25 @@ bool tron_signingInit(const TronSignTx *msg)
     tron_setBlockReference(msg, &tx);
 
     // now serialize transaction
-    /*pb_ostream_t stream = pb_ostream_from_buffer(tx.raw_data.contract[0].parameter.value.bytes,
-                                                    sizeof(tx.raw_data.contract[0].parameter.value.bytes));
-    if (!pb_encode(&stream, TransferContract_fields, &contract))
+    uint8_t buf[1024];
+    pb_ostream_t stream = pb_ostream_from_buffer(buf, sizeof(buf));
+    if (!pb_encode(&stream, Transaction_fields, &tx))
     {
-        return tron_signingAbort("Failed to encode TransferContract");
+        return tron_signingAbort("Failed to encode Transaction");
+    }    
+    
+    // hash the serialized transaction
+    uint8_t hash[32];
+    sha256_Raw(buf, stream.bytes_written, hash);
+
+    // Now sign the hash
+    uint8_t sig[64];
+    if (ecdsa_sign_digest(&secp256k1, node->private_key, hash, sig,
+                          NULL, NULL) != 0)
+    {
+        return tron_signingAbort("Signing failed");
     }
-    tx.raw_data.contract[0].parameter.value.size = stream.bytes_written;
-*/
+
     return true;
 }
 
