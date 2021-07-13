@@ -31,12 +31,20 @@ message TronAddress {
 message TronSignTx {
     repeated uint32 address_n = 1;                              // BIP-32 path to derive the key from master node
     // Common part of transaction
-    optional bytes ref_block_bytes = 2;                         // Reference block number
-    optional bytes ref_block_hash = 3;                          // Reference block hash
-    optional uint64 expiration = 4;                             // Transaction expiration
-    optional string data = 5;                                   // Extra transaction info
+    optional uint64 timestamp = 2;                              // UTC timestamp
+    optional uint64 expiration = 3;                             // Transaction expiration
+    optional TronBlockHeader block_header = 4;                      // Now block data
     optional TronContract contract = 6;                         // Contract messages
-    optional uint64 timestamp = 7;                              // UTC timestamp
+    optional uint64 fee_limit = 8;                              // fee limit
+
+    message TronBlockHeader {
+        optional int64 timestamp = 1;
+        optional string tx_trie_root = 2;
+        optional string parent_hash = 3;
+        optional int64 number = 7;
+        optional string witness_address = 9;
+        optional int32 version = 10;
+    }
 
     /***
      * Tron Contracts Messages

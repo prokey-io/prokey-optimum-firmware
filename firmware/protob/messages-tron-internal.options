@@ -1,7 +1,13 @@
 Any.type_url                                max_size:64
 Any.value                                   max_size:1024
 
+raw.tx_trie_root                            max_size:64
+raw.parent_hash                             max_size:64
+raw.witness_address                         max_size:128
+
 rawTr.contract                              max_count:1
+rawTr.ref_block_hash                        max_size:8
+rawTr.ref_block_bytes                       max_size:2
 
 TransferContract.owner_address              max_size:21
 TransferContract.to_address                 max_size:21

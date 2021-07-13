@@ -26,8 +26,8 @@
 
 static const int8_t tron_prefix = 0x41; // Tron addresses must start with T
 
-void tron_getAddress(const uint32_t* address_n, uint32_t address_n_count, 
-                     char* address, uint32_t address_len)
+void tron_getAddress(const uint32_t *address_n, uint32_t address_n_count,
+                     char *address, uint32_t address_len)
 {
     HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, address_n,
                                       address_n_count, NULL);
@@ -38,14 +38,14 @@ void tron_getAddress(const uint32_t* address_n, uint32_t address_n_count,
     uint8_t hash[SHA3_256_DIGEST_LENGTH];
     keccak_256(node->public_key, sizeof(node->public_key), hash);
     uint8_t key[21];
-    key[0] = tron_prefix;  
+    key[0] = tron_prefix;
     // copy last 20 bytes of hash
     memcpy(key + 1, hash + (SHA3_256_DIGEST_LENGTH - 21), 20);
-    base58_encode_check(key, sizeof(key), HASHER_SHA2D, address, address_len);    
+    base58_encode_check(key, sizeof(key), HASHER_SHA2D, address, address_len);
 }
 
 // data must be 21 in length
-bool tron_decodeAddress(uint8_t *data, uint32_t data_len, const char* address)
+bool tron_decodeAddress(uint8_t *data, uint32_t data_len, const char *address)
 {
     if (base58_decode_check(address, HASHER_SHA2D, data, data_len) == 0)
     {
@@ -54,13 +54,48 @@ bool tron_decodeAddress(uint8_t *data, uint32_t data_len, const char* address)
     return true;
 }
 
-bool tron_setContractAddress(pb_byte_t* bytes, pb_size_t* size, const char* address)
+bool tron_setContractAddress(pb_byte_t *bytes, pb_size_t *size, const char *address)
 {
     *size = 21;
     return tron_decodeAddress(bytes, 21, address);
 }
 
-bool tron_signingInit(const TronSignTx* msg)
+void tron_getBlockHash(TronBlockHeader *header, uint8_t hash[32])
+{
+    // convert block header to tron internal block header
+    BlockHeader bh;
+    bh.raw_data.timestamp = header->timestamp;
+    strcpy(bh.raw_data.tx_trie_root, header->tx_trie_root);
+    strcpy(bh.raw_data.parent_hash, header->parent_hash);
+    bh.raw_data.number = header->number;
+    strcpy(bh.raw_data.witness_address, header->witness_address);
+    bh.raw_data.version = header->version;
+
+    uint8_t buf[256];
+    pb_ostream_t stream = pb_ostream_from_buffer(buf, sizeof(buf));
+    if (!pb_encode(&stream, BlockHeader_fields, &bh))
+    {
+        return tron_signingAbort("Failed to encode BlockHeader");
+    }
+
+    sha256_Raw(buf, stream.bytes_written, hash);
+}
+
+bool tron_setBlockReference(const TronSignTx *msg, Transaction *tx)
+{
+    uint8_t hash[32];
+    tron_getBlockHash(&msg->block_header, hash);
+    memcpy(tx->raw_data.ref_block_hash.bytes, hash + 8, 8);
+    tx->raw_data.ref_block_hash.size = 8;
+    
+    uint8_t block_height[8];
+    write_be_64(block_height, msg->block_header.number);
+
+    tx->raw_data.ref_block_bytes.size = 2;
+    memcpy(tx->raw_data.ref_block_bytes.bytes, block_height + 6, 2);
+}
+
+bool tron_signingInit(const TronSignTx *msg)
 {
     // check required fileds
     if (!msg->has_contract)
@@ -71,13 +106,13 @@ bool tron_signingInit(const TronSignTx* msg)
     {
         return tron_signingAbort("Timestamp is missing");
     }
-    
+
     // Get the user address
     char owner_address[36];
     tron_getAddress(msg->address_n, msg->address_n_count, owner_address, sizeof(owner_address));
     uint8_t owner_address_decoded[21];
     if (!tron_decodeAddress(owner_address_decoded, sizeof(owner_address_decoded), owner_address))
-        return tron_signingAbort("Cannot decode owner address");    
+        return tron_signingAbort("Cannot decode owner address");
 
     Transaction tx; // internal Tron transaction
     tx.raw_data.contract_count = 1;
@@ -90,40 +125,62 @@ bool tron_signingInit(const TronSignTx* msg)
 
         contract.amount = msg->contract.transfer_contract.amount; // set amount
 
-        contract.owner_address.size = sizeof(owner_address_decoded); 
+        contract.owner_address.size = sizeof(owner_address_decoded);
         memcpy(contract.owner_address.bytes, owner_address_decoded, sizeof(owner_address_decoded)); // set owner address
 
-        if (!tron_setContractAddress(contract.to_address.bytes, &contract.to_address.size, 
+        if (!tron_setContractAddress(contract.to_address.bytes, &contract.to_address.size,
                                      msg->contract.transfer_contract.to_address)) // set to address
+        {
             return tron_signingAbort("Cannot decode to address");
+        }
 
         // encode the data
         strncpy(
             tx.raw_data.contract[0].parameter.type_url,
             "type.googleapis.com/protocol.TransferContract",
-            sizeof(tx.raw_data.contract[0].parameter.type_url)
-        );
-        pb_ostream_t stream = pb_ostream_from_buffer(tx.raw_data.contract[0].parameter.value.bytes, 
+            sizeof(tx.raw_data.contract[0].parameter.type_url));
+        pb_ostream_t stream = pb_ostream_from_buffer(tx.raw_data.contract[0].parameter.value.bytes,
                                                      sizeof(tx.raw_data.contract[0].parameter.value.bytes));
         if (!pb_encode(&stream, TransferContract_fields, &contract))
-            return tron_signingAbort("Failed to encode TransferContract");            
+        {
+            return tron_signingAbort("Failed to encode TransferContract");
+        }
+        tx.raw_data.contract[0].parameter.value.size = stream.bytes_written;
     }
     else if (msg->contract.has_transfer_asset_contract)
     {
-        // transfer asset contract 
+        // transfer asset contract
         tx.raw_data.contract[0].type = ContractType_TransferAssetContract;
     }
-    
+
+    // set timestamp
+    tx.raw_data.timestamp = msg->timestamp;
+    tx.raw_data.expiration = msg->has_expiration ? msg->expiration : msg->timestamp + 10 * 60 * 60 * 1000; // 10 hours
+    tx.raw_data.fee_limit = msg->fee_limit;
+
+    // set block refrence
+    tron_setBlockReference(msg, &tx);
+
+    // now serialize transaction
+    /*pb_ostream_t stream = pb_ostream_from_buffer(tx.raw_data.contract[0].parameter.value.bytes,
+                                                    sizeof(tx.raw_data.contract[0].parameter.value.bytes));
+    if (!pb_encode(&stream, TransferContract_fields, &contract))
+    {
+        return tron_signingAbort("Failed to encode TransferContract");
+    }
+    tx.raw_data.contract[0].parameter.value.size = stream.bytes_written;
+*/
     return true;
 }
 
 bool tron_signingAbort(const char *reason)
 {
-  if (!reason) {
-    reason = _("Unknown error");
-  }
+    if (!reason)
+    {
+        reason = _("Unknown error");
+    }
 
-  fsm_sendFailure(FailureType_Failure_ProcessError, reason);
-  layoutHome();
-  return false;
+    fsm_sendFailure(FailureType_Failure_ProcessError, reason);
+    layoutHome();
+    return false;
 }

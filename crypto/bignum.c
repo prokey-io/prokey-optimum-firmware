@@ -97,6 +97,17 @@ inline void write_le(uint8_t *data, uint32_t x) {
   data[0] = x;
 }
 
+inline void write_le64(uint8_t *data, uint64_t x) {
+  data[7] = x >> 56;
+  data[6] = x >> 48;
+  data[5] = x >> 40;
+  data[4] = x >> 32;
+  data[3] = x >> 24;
+  data[2] = x >> 16;
+  data[1] = x >> 8;
+  data[0] = x;
+}
+
 // convert a raw bigendian 256 bit value into a normalized bignum.
 // out_number is partly reduced (since it fits in 256 bit).
 void bn_read_be(const uint8_t *in_number, bignum256 *out_number) {
