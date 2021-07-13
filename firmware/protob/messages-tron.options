@@ -8,4 +8,6 @@ TronBlockHeader.witness_address                     max_size:128
 
 TronSignTx.address_n                                max_count:8
 
+TronSignedTx.serialized_tx                          max_size:1024
+
 TronTransferContract.to_address                     max_size:36

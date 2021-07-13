@@ -47,8 +47,13 @@ void fsm_msgTronSignTx(TronSignTx* msg)
     CHECK_INITIALIZED
     CHECK_PIN
 
-    if (!tron_signingInit(msg))
+    RESP_INIT(TronSignedTx);
+
+    if (!tron_signTransaction(msg, resp))
     {
         return;
     }
+
+    msg_write(MessageType_MessageType_TronSignedTx, resp);
+    layoutHome();
 }

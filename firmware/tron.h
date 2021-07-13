@@ -27,7 +27,7 @@
 HDNode* tron_getAddress(const uint32_t* address_n, uint32_t address_n_count, 
                         char* address, uint32_t address_len);
 
-bool tron_signingInit(const TronSignTx* msg);
+bool tron_signTransaction(const TronSignTx* msg, TronSignedTx* resp);
 bool tron_signingAbort(const char *reason);
 
 #endif // __PROKEY_TRON_H__

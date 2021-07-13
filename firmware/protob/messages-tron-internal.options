@@ -9,5 +9,6 @@ rawTr.contract                              max_count:1
 rawTr.ref_block_hash                        max_size:8
 rawTr.ref_block_bytes                       max_size:2
 
+Transaction.signature                       max_count:8 max_size:64
 TransferContract.owner_address              max_size:21
 TransferContract.to_address                 max_size:21

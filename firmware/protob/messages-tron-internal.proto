@@ -62,6 +62,7 @@ message Transaction {
     }
 
     rawTr raw_data = 1;
+    repeated bytes signature = 2;
 }
 
 message BlockHeader {
