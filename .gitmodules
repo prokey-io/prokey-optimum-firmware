@@ -15,3 +15,6 @@
 [submodule "emulator/wsServer"]
 	path = emulator/wsServer
 	url = https://github.com/prokey-io/wsServer.git
+[submodule "common/defs/ethereum/tokens"]
+	path = common/defs/ethereum/tokens
+	url = https://github.com/prokey-io/tokens.git
