@@ -8,7 +8,7 @@
   "curve_name": "secp256k1",
   "address_type": 25,
   "address_type_p2sh": 5,
-  "maxfee_kb": 1000000,
+  "maxfee_kb": 490000000000,
   "minfee_kb": 10000,
   "signed_message_header": "Diamond Signed Message:\n",
   "hash_genesis_block": "000002d56463941c20eae5cb474cc805b646515d18bc7dc222a0885b206eadb0",
