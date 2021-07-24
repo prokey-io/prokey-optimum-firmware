@@ -11,7 +11,7 @@
             "program": "${workspaceRoot}/firmware/prokey.elf",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceRoot}/firmware/",
             "environment": [
                 {"name":"TREZOR_OLED_SCALE", "value":"3"}, 
                 {"name": "SDL_VIDEO_X11_VISUALID", "value": ""}, 
