@@ -97,7 +97,7 @@ inline void write_le(uint8_t *data, uint32_t x) {
   data[0] = x;
 }
 
-inline void write_le64(uint8_t *data, uint64_t x) {
+inline void write_le_64(uint8_t *data, uint64_t x) {
   data[7] = x >> 56;
   data[6] = x >> 48;
   data[5] = x >> 40;

@@ -29,6 +29,7 @@
         "layout.h": "c",
         "curves.h": "c",
         "secp256k1.h": "c",
-        "ecdsa.h": "c"
+        "ecdsa.h": "c",
+        "*.table": "c"
     },
 }

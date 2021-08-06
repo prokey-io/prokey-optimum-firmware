@@ -34,14 +34,15 @@ HDNode* tron_getAddress(const uint32_t *address_n, uint32_t address_n_count,
                                       address_n_count, NULL);
     if (!node)
         return NULL;
-    hdnode_fill_public_key(node);
+    uint8_t public_key[65];
+    ecdsa_get_public_key65(&secp256k1, node->private_key, public_key);
 
     uint8_t hash[SHA3_256_DIGEST_LENGTH];
-    keccak_256(node->public_key, sizeof(node->public_key), hash);
+    keccak_256(public_key + 1, sizeof(public_key) - 1, hash);
     uint8_t key[21];
     key[0] = tron_prefix;
     // copy last 20 bytes of hash
-    memcpy(key + 1, hash + (SHA3_256_DIGEST_LENGTH - 21), 20);
+    memcpy(key + 1, hash + (SHA3_256_DIGEST_LENGTH - 20), 20);
     base58_encode_check(key, sizeof(key), HASHER_SHA2D, address, address_len);
 
     return node;
@@ -73,15 +74,12 @@ bool tron_getBlockHash(const TronBlockHeader *header, uint8_t hash[32])
     bh.raw_data.number = header->number;
     strcpy(bh.raw_data.witness_address, header->witness_address);
     bh.raw_data.version = header->version;
-    strcpy(bh.witness_signature.bytes, header->witness_signature);
-    bh.witness_signature.size = strlen(header->witness_signature) + 1;
-    bh.witness_signature.bytes[bh.witness_signature.size - 1] = 0;
 
     uint8_t buf[512];
     pb_ostream_t stream = pb_ostream_from_buffer(buf, sizeof(buf));
-    if (!pb_encode(&stream, BlockHeader_fields, &bh))
+    if (!pb_encode(&stream, raw_fields, &bh.raw_data))
     {
-        return tron_signingAbort("Failed to encode BlockHeader");
+        return tron_signingAbort("Failed to encode BlockHeader.raw_data");
     }
 
     sha256_Raw(buf, stream.bytes_written, hash);
@@ -97,10 +95,12 @@ bool tron_setBlockReference(const TronSignTx *msg, Transaction *tx)
     tx->raw_data.ref_block_hash.size = 8;
     
     uint8_t block_height[8];
-    write_be_64(block_height, msg->block_header.number);
+    write_le_64(block_height, msg->block_header.number);
 
     tx->raw_data.ref_block_bytes.size = 2;
-    memcpy(tx->raw_data.ref_block_bytes.bytes, block_height + 6, 2);
+    tx->raw_data.ref_block_bytes.bytes[0] = block_height[7];
+    tx->raw_data.ref_block_bytes.bytes[1] = block_height[6];
+    //memcpy(tx->raw_data.ref_block_bytes.bytes, block_height + 6, 2);
     return true;
 }
 
@@ -174,7 +174,7 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx* resp)
     // now serialize transaction
     pb_ostream_t stream = pb_ostream_from_buffer(resp->serialized_tx.bytes, 
                                           sizeof(resp->serialized_tx.bytes));
-    if (!pb_encode(&stream, Transaction_fields, &tx))
+    if (!pb_encode(&stream, rawTr_fields, &tx.raw_data))
     {
         return tron_signingAbort("Failed to encode Transaction");
     }    
@@ -185,12 +185,12 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx* resp)
 
     // Now sign the hash
     if (ecdsa_sign_digest(&secp256k1, node->private_key, hash, tx.signature[0].bytes,
-                          NULL, NULL) != 0)
+                          tx.signature[0].bytes + 64, NULL) != 0)
     {
         return tron_signingAbort("Signing failed");
     }
     tx.signature_count = 1;    
-    tx.signature[0].size = 64;
+    tx.signature[0].size = 65;
     
     // reset stream
     stream = pb_ostream_from_buffer(resp->serialized_tx.bytes, 
