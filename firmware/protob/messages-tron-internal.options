@@ -1,9 +1,11 @@
-Any.type_url                                max_size:64
+Any.type_url                                max_size:65
 Any.value                                   max_size:1024
 
-raw.tx_trie_root                            max_size:64
-raw.parent_hash                             max_size:64
+raw.tx_trie_root                            max_size:65
+raw.parent_hash                             max_size:65
 raw.witness_address                         max_size:128
+
+BlockHeader.witness_signature               max_size:256
 
 rawTr.contract                              max_count:1
 rawTr.ref_block_hash                        max_size:8

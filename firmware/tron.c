@@ -73,8 +73,11 @@ bool tron_getBlockHash(const TronBlockHeader *header, uint8_t hash[32])
     bh.raw_data.number = header->number;
     strcpy(bh.raw_data.witness_address, header->witness_address);
     bh.raw_data.version = header->version;
+    strcpy(bh.witness_signature.bytes, header->witness_signature);
+    bh.witness_signature.size = strlen(header->witness_signature) + 1;
+    bh.witness_signature.bytes[bh.witness_signature.size - 1] = 0;
 
-    uint8_t buf[256];
+    uint8_t buf[512];
     pb_ostream_t stream = pb_ostream_from_buffer(buf, sizeof(buf));
     if (!pb_encode(&stream, BlockHeader_fields, &bh))
     {
