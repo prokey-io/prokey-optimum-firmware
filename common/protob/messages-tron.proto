@@ -44,7 +44,6 @@ message TronSignTx {
         optional int64 number = 7;
         optional string witness_address = 9;
         optional int32 version = 10;
-        optional string witness_signature = 11;
     }
 
     /***

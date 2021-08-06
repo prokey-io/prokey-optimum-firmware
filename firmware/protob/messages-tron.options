@@ -5,7 +5,6 @@ TronAddress.address                                 max_size:36
 TronBlockHeader.tx_trie_root                        max_size:65
 TronBlockHeader.parent_hash                         max_size:65
 TronBlockHeader.witness_address                     max_size:128
-TronBlockHeader.witness_signature                   max_size:256
 
 TronSignTx.address_n                                max_count:8
 
