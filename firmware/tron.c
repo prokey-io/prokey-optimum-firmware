@@ -24,6 +24,7 @@
 #include "gettext.h"
 #include "pb_encode.h"
 #include "secp256k1.h"
+#include "util.h"
 
 static const int8_t tron_prefix = 0x41; // Tron addresses must start with T
 
@@ -64,43 +65,16 @@ bool tron_setContractAddress(pb_byte_t *bytes, pb_size_t *size, const char *addr
     return tron_decodeAddress(bytes, 21, address);
 }
 
-bool tron_getBlockHash(const TronBlockHeader *header, uint8_t hash[32])
-{
-    // convert block header to tron internal block header
-    BlockHeader bh;
-    bh.raw_data.timestamp = header->timestamp;
-    strcpy(bh.raw_data.tx_trie_root, header->tx_trie_root);
-    strcpy(bh.raw_data.parent_hash, header->parent_hash);
-    bh.raw_data.number = header->number;
-    strcpy(bh.raw_data.witness_address, header->witness_address);
-    bh.raw_data.version = header->version;
-
-    uint8_t buf[512];
-    pb_ostream_t stream = pb_ostream_from_buffer(buf, sizeof(buf));
-    if (!pb_encode(&stream, raw_fields, &bh.raw_data))
-    {
-        return tron_signingAbort("Failed to encode BlockHeader.raw_data");
-    }
-
-    sha256_Raw(buf, stream.bytes_written, hash);
-    return true;
-}
-
 bool tron_setBlockReference(const TronSignTx *msg, Transaction *tx)
 {
     uint8_t hash[32];
-    if (!tron_getBlockHash(&msg->block_header, hash))
-        return false;
+    hex2data(msg->block_id, hash);
     memcpy(tx->raw_data.ref_block_hash.bytes, hash + 8, 8);
     tx->raw_data.ref_block_hash.size = 8;
     
-    uint8_t block_height[8];
-    write_le_64(block_height, msg->block_header.number);
-
     tx->raw_data.ref_block_bytes.size = 2;
-    tx->raw_data.ref_block_bytes.bytes[0] = block_height[7];
-    tx->raw_data.ref_block_bytes.bytes[1] = block_height[6];
-    //memcpy(tx->raw_data.ref_block_bytes.bytes, block_height + 6, 2);
+    tx->raw_data.ref_block_bytes.bytes[0] = hash[6];
+    tx->raw_data.ref_block_bytes.bytes[1] = hash[7];
     return true;
 }
 

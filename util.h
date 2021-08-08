@@ -2,6 +2,7 @@
  * This file is part of the TREZOR project, https://trezor.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
+ * Copyright (C) 2021 Ali Akbar Mohammadi
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -59,6 +60,9 @@ void uint32hex(uint32_t num, char *str);
 
 // converts data to hexa
 void data2hex(const void *data, uint32_t len, char *str);
+
+// converts hexa to data
+void hex2data(const char *str, uint8_t *data);
 
 // read protobuf integer and advance pointer
 uint32_t readprotobufint(const uint8_t **ptr);

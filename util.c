@@ -22,57 +22,95 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/iwdg.h>
 
-inline void delay(uint32_t wait) {
-  while (--wait > 0) __asm__("nop");
+inline void delay(uint32_t wait)
+{
+  while (--wait > 0)
+    __asm__("nop");
 }
 
-void wait_random(void) {
+void wait_random(void)
+{
   int wait = random32() & 0xff;
   volatile int i = 0;
   volatile int j = wait;
-  while (i < wait) {
-    if (i + j != wait) {
+  while (i < wait)
+  {
+    if (i + j != wait)
+    {
       shutdown();
     }
     ++i;
     --j;
   }
   // Double-check loop completion.
-  if (i != wait || j != 0) {
+  if (i != wait || j != 0)
+  {
     shutdown();
   }
 }
 
 static const char *hexdigits = "0123456789ABCDEF";
 
-void uint32hex(uint32_t num, char *str) {
-  for (uint32_t i = 0; i < 8; i++) {
+void uint32hex(uint32_t num, char *str)
+{
+  for (uint32_t i = 0; i < 8; i++)
+  {
     str[i] = hexdigits[(num >> (28 - i * 4)) & 0xF];
   }
 }
 
 // converts data to hexa
-void data2hex(const void *data, uint32_t len, char *str) {
+void data2hex(const void *data, uint32_t len, char *str)
+{
   const uint8_t *cdata = (uint8_t *)data;
-  for (uint32_t i = 0; i < len; i++) {
+  for (uint32_t i = 0; i < len; i++)
+  {
     str[i * 2] = hexdigits[(cdata[i] >> 4) & 0xF];
     str[i * 2 + 1] = hexdigits[cdata[i] & 0xF];
   }
   str[len * 2] = 0;
 }
 
-uint32_t readprotobufint(const uint8_t **ptr) {
+// converts hexa to data
+void hex2data(const char *str, uint8_t *data)
+{
+  int len = strlen(str);
+  for (uint32_t i = 0; i < len; i++)
+  {
+    char c = str[i];
+    int value = 0;
+    if (c >= '0' && c <= '9')
+      value = (c - '0');
+    else if (c >= 'A' && c <= 'F')
+      value = (10 + (c - 'A'));
+    else if (c >= 'a' && c <= 'f')
+      value = (10 + (c - 'a'));
+    if (i % 2 == 0)
+    {
+      data[i / 2] = 0;
+      value *= 16;
+    }
+    data[i / 2] += value;
+  }
+}
+
+uint32_t readprotobufint(const uint8_t **ptr)
+{
   uint32_t result = (**ptr & 0x7F);
-  if (**ptr & 0x80) {
+  if (**ptr & 0x80)
+  {
     (*ptr)++;
     result += (**ptr & 0x7F) * 128;
-    if (**ptr & 0x80) {
+    if (**ptr & 0x80)
+    {
       (*ptr)++;
       result += (**ptr & 0x7F) * 128 * 128;
-      if (**ptr & 0x80) {
+      if (**ptr & 0x80)
+      {
         (*ptr)++;
         result += (**ptr & 0x7F) * 128 * 128 * 128;
-        if (**ptr & 0x80) {
+        if (**ptr & 0x80)
+        {
           (*ptr)++;
           result += (**ptr & 0x7F) * 128 * 128 * 128 * 128;
         }
@@ -84,26 +122,29 @@ uint32_t readprotobufint(const uint8_t **ptr) {
 }
 
 #if EMULATOR
-void DeviceReset(bool isRunBootloader) {}
-#else
-void __attribute__((noreturn)) DeviceReset( bool isRunBootloader )
+void DeviceReset(bool isRunBootloader)
 {
-	(void)isRunBootloader;
+}
+#else
+void __attribute__((noreturn)) DeviceReset(bool isRunBootloader)
+{
+  (void)isRunBootloader;
 
-	//! Enable Low Speed Internal clock 
-	rcc_osc_on(RCC_LSI);
+  //! Enable Low Speed Internal clock
+  rcc_osc_on(RCC_LSI);
 
-	/* Wait till LSI is ready */
-	rcc_wait_for_sysclk_status(RCC_LSI);
+  /* Wait till LSI is ready */
+  rcc_wait_for_sysclk_status(RCC_LSI);
 
-	/* IWDG timeout equal to 250 ms */
-	iwdg_set_period_ms(250);
+  /* IWDG timeout equal to 250 ms */
+  iwdg_set_period_ms(250);
 
-	iwdg_reset();
+  iwdg_reset();
 
-	/* Enable IWDG (the LSI oscillator will be enabled by hardware) */
-	iwdg_start();
+  /* Enable IWDG (the LSI oscillator will be enabled by hardware) */
+  iwdg_start();
 
-	while(true);
+  while (true)
+    ;
 }
 #endif
