@@ -5,12 +5,15 @@ raw.tx_trie_root                            max_size:65
 raw.parent_hash                             max_size:65
 raw.witness_address                         max_size:128
 
-BlockHeader.witness_signature               max_size:256
-
 rawTr.contract                              max_count:1
 rawTr.ref_block_hash                        max_size:8
 rawTr.ref_block_bytes                       max_size:2
 
 Transaction.signature                       max_count:8 max_size:65
+
 TransferContract.owner_address              max_size:21
 TransferContract.to_address                 max_size:21
+
+TransferAssetContract.asset_name            max_size:32
+TransferAssetContract.owner_address         max_size:21
+TransferAssetContract.to_address            max_size:21

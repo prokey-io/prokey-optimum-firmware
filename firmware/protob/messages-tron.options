@@ -8,3 +8,6 @@ TronSignTx.block_id                                 max_size:65
 TronSignedTx.serialized_tx                          max_size:1024
 
 TronTransferContract.to_address                     max_size:36
+
+TronTransferAssetContract.asset_name                max_size:32
+TronTransferAssetContract.to_address                max_size:36
