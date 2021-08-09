@@ -101,11 +101,15 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
     // check required fileds
     if (!msg->has_contract)
     {
-        return tron_signingAbort("Contract is missing");
+        return tron_signingAbort("Contract is required");
     }
     if (!msg->has_timestamp)
     {
-        return tron_signingAbort("Timestamp is missing");
+        return tron_signingAbort("Timestamp is required");
+    }
+    if (!msg->has_block_id)
+    {
+        return tron_signingAbort("Refrence block id is required");
     }
 
     // Get the user address
@@ -123,10 +127,21 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         //==================
         // transfer contract
         //==================
+        // check required fileds
+        if (!msg->contract.transfer_contract.has_amount)
+        {
+            return tron_signingAbort("Amount is required");
+        }
+        if (!msg->contract.transfer_contract.has_to_address)
+        {
+            return tron_signingAbort("To address is required");
+        }
+
         tx.raw_data.contract[0].type = ContractType_TransferContract;
         TransferContract contract;
 
-        contract.amount = msg->contract.transfer_contract.amount; // set amount
+        // set amount
+        contract.amount = msg->contract.transfer_contract.amount; 
 
         // set owner address
         contract.owner_address.size = sizeof(owner_address_decoded);
@@ -151,6 +166,20 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         //========================
         // transfer asset contract
         //========================
+        // check required fileds
+        if (!msg->contract.transfer_asset_contract.has_asset_name)
+        {
+            return tron_signingAbort("Asset name is required");
+        }
+        if (!msg->contract.transfer_asset_contract.has_to_address)
+        {
+            return tron_signingAbort("To address is required");
+        }
+        if (!msg->contract.transfer_asset_contract.has_amount)
+        {
+            return tron_signingAbort("Amount is required");
+        }
+
         tx.raw_data.contract[0].type = ContractType_TransferAssetContract;
         TransferAssetContract contract;
 
@@ -185,6 +214,12 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         //========================
         // freeze balance contract
         //========================
+        // check required fileds
+        if (!msg->contract.freeze_balance_contract.has_frozen_balance)
+        {
+            return tron_signingAbort("Frozen balance is required");
+        }
+
         tx.raw_data.contract[0].type = ContractType_FreezeBalanceContract;
         FreezeBalanceContract contract;
 
@@ -204,7 +239,14 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
 
         // set frozen balance and frozen duration
         contract.frozen_balance = msg->contract.freeze_balance_contract.frozen_balance;
-        contract.frozen_duration = msg->contract.freeze_balance_contract.frozen_duration;
+        if (!msg->contract.freeze_balance_contract.has_frozen_duration)
+        {
+            contract.frozen_duration = 3; // 3 days
+        }
+        else
+        {
+            contract.frozen_duration = msg->contract.freeze_balance_contract.frozen_duration;
+        }
 
         // set resource code
         contract.resource = msg->contract.freeze_balance_contract.resource;
@@ -285,7 +327,7 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         {
             return tron_signingAbort("Failed to encode WithdrawBalanceContract");
         }
-    }
+    }    
 
     // set timestamp
     tx.raw_data.timestamp = msg->timestamp;

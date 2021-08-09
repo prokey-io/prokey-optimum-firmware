@@ -103,7 +103,7 @@ message TronSignTx {
         // Freeze TRX balance
         message TronFreezeBalanceContract {
             optional uint64 frozen_balance = 1;                 // Amount to freeze
-            optional uint64 frozen_duration = 2;                // Freeze minimal duration in days currently 3 days is fixed on tron network
+            optional uint64 frozen_duration = 2;                // (Optional)Freeze minimal duration in days currently 3 days is fixed on tron network
             optional TronResourceCode resource = 3;             // Freeze the balance to get bandwidth or energy
             optional string receiver_address = 4;               // (Optional)Energy or bandwidth receiver address
         }        
