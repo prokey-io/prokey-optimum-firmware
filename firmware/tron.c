@@ -79,7 +79,7 @@ bool tron_setBlockReference(const TronSignTx *msg, Transaction *tx)
 }
 
 // encode contract inside the transaction
-bool tron_encodeContract(Transaction* tx, char *contract_name, const pb_field_t *fileds, const void *contract)
+bool tron_encodeContract(Transaction *tx, char *contract_name, const pb_field_t *fileds, const void *contract)
 {
     strncpy(
         tx->raw_data.contract[0].parameter.type_url,
@@ -141,7 +141,7 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
 
         // encode the contract
         if (!tron_encodeContract(&tx, "type.googleapis.com/protocol.TransferContract",
-            TransferContract_fields, &contract))
+                                 TransferContract_fields, &contract))
         {
             return tron_signingAbort("Failed to encode TransferContract");
         }
@@ -175,9 +175,45 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
 
         // encode the contract
         if (!tron_encodeContract(&tx, "type.googleapis.com/protocol.TransferAssetContract",
-            TransferAssetContract_fields, &contract))
+                                 TransferAssetContract_fields, &contract))
         {
             return tron_signingAbort("Failed to encode TransferAssetContract");
+        }
+    }
+    else if (msg->contract.has_freeze_balance_contract)
+    {
+        //========================
+        // freeze balance contract
+        //========================
+        tx.raw_data.contract[0].type = ContractType_FreezeBalanceContract;
+        FreezeBalanceContract contract;
+
+        // set owner address
+        contract.owner_address.size = sizeof(owner_address_decoded);
+        memcpy(contract.owner_address.bytes, owner_address_decoded, sizeof(owner_address_decoded)); // set owner address
+
+        // set to address
+        if (msg->contract.freeze_balance_contract.has_receiver_address)
+        {
+            if (!tron_setContractAddress(contract.receiver_address.bytes, &contract.receiver_address.size,
+                                         msg->contract.freeze_balance_contract.receiver_address)) // set to address
+            {
+                return tron_signingAbort("Cannot decode to address");
+            }
+        }
+
+        // set frozen balance and frozen duration
+        contract.frozen_balance = msg->contract.freeze_balance_contract.frozen_balance;
+        contract.frozen_duration = msg->contract.freeze_balance_contract.frozen_duration;
+
+        // set resource code
+        contract.resource = msg->contract.freeze_balance_contract.resource;
+
+        // encode the contract
+        if (!tron_encodeContract(&tx, "type.googleapis.com/protocol.FreezeBalanceContract",
+                                 FreezeBalanceContract_fields, &contract))
+        {
+            return tron_signingAbort("Failed to encode FreezeBalanceContract");
         }
     }
 
