@@ -248,6 +248,26 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
             return tron_signingAbort("Failed to encode UnfreezeBalanceContract");
         }
     }
+    else if (msg->contract.has_unfreeze_asset_contract)
+    {
+        //========================
+        // unfreeze asset contract
+        //========================
+        tx.raw_data.contract[0].type = ContractType_UnfreezeAssetContract;
+        UnfreezeAssetContract contract;
+
+        // set owner address
+        contract.owner_address.size = sizeof(owner_address_decoded);
+        memcpy(contract.owner_address.bytes, owner_address_decoded, sizeof(owner_address_decoded)); // set owner address
+
+        // encode the contract
+        if (!tron_encodeContract(&tx, "type.googleapis.com/protocol.UnfreezeAssetContract",
+                                 UnfreezeAssetContract_fields, &contract))
+        {
+            return tron_signingAbort("Failed to encode UnfreezeAssetContract");
+        }
+    }
+
 
     // set timestamp
     tx.raw_data.timestamp = msg->timestamp;

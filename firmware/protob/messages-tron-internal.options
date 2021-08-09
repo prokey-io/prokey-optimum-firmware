@@ -23,3 +23,5 @@ FreezeBalanceContract.receiver_address      max_size:21
 
 UnfreezeBalanceContract.owner_address       max_size:21
 UnfreezeBalanceContract.receiver_address    max_size:21
+
+UnfreezeAssetContract.owner_address         max_size:21
