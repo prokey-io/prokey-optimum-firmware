@@ -13,3 +13,5 @@ TronTransferAssetContract.asset_name                max_size:32
 TronTransferAssetContract.to_address                max_size:36
 
 TronFreezeBalanceContract.receiver_address          max_size:36
+
+TronUnfreezeBalanceContract.receiver_address        max_size:36

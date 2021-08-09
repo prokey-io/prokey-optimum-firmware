@@ -109,6 +109,8 @@ message TronSignTx {
         }        
         // Unfreeze TRX Balance
         message TronUnfreezeBalanceContract {
+            optional TronResourceCode resource = 3;             // Unfreeze the bandwidth or energy
+            optional string receiver_address = 4;               // (Optional)Energy or bandwidth receiver address
         }
         // Unfreeze Asset Balance
         message TronUnfreezeAssetContract {

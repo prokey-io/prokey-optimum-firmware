@@ -20,3 +20,6 @@ TransferAssetContract.to_address            max_size:21
 
 FreezeBalanceContract.owner_address         max_size:21
 FreezeBalanceContract.receiver_address      max_size:21
+
+UnfreezeBalanceContract.owner_address       max_size:21
+UnfreezeBalanceContract.receiver_address    max_size:21
