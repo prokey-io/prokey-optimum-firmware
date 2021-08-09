@@ -1,3 +1,8 @@
+Version 1.10.2
+* Update ERC20 tokens
+* Add Binance Chain Native to ETH Networks
+* Add Binance Chain Native Tokens (BEP20)
+
 Version 1.10.1 [Jun 2021]
 * Add Support for Ripple
 * Add websocket to emulator
