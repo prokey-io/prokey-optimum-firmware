@@ -16,6 +16,7 @@
 				case         30: suffix = " RBTC";  break;  /* RSK */ \
 				case         31: suffix = " tRBTC"; break;  /* RSK Testnet */ \
 				case         42: suffix = " tKOV";  break;  /* Ethereum Testnet Kovan */ \
+				case         56: suffix = " BNB";   break;  /* Binance Chain Native */ \
 				case         60: suffix = " GO";    break;  /* GoChain */ \
 				case         61: suffix = " ETC";   break;  /* Ethereum Classic */ \
 				case         62: suffix = " tETC";  break;  /* Ethereum Classic Testnet */ \
