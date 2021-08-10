@@ -27,3 +27,8 @@ UnfreezeBalanceContract.receiver_address    max_size:21
 UnfreezeAssetContract.owner_address         max_size:21
 
 WithdrawBalanceContract.owner_address       max_size:21
+
+Vote.vote_address                           max_size:21
+
+VoteWitnessContract.owner_address           max_size:21
+VoteWitnessContract.votes                   max_count:8

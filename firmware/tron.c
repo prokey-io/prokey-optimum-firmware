@@ -327,7 +327,61 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         {
             return tron_signingAbort("Failed to encode WithdrawBalanceContract");
         }
-    }    
+    }
+    else if (msg->contract.has_vote_witness_contract)
+    {
+        //======================
+        // Vote witness contract
+        //======================
+        // check required fileds
+        if (msg->contract.vote_witness_contract.votes_count == 0)
+        {
+            return tron_signingAbort("Vote list is empty.");            
+        }
+        for (size_t i = 0; i < msg->contract.vote_witness_contract.votes_count; i++)
+        {
+            if (!msg->contract.vote_witness_contract.votes[i].has_vote_address)
+            {
+                return tron_signingAbort("Vote address is required");
+            }
+            if (!msg->contract.vote_witness_contract.votes[i].has_vote_count)
+            {
+                return tron_signingAbort("Vote count is required");
+            }
+        }
+        
+        tx.raw_data.contract[0].type = ContractType_VoteWitnessContract;
+        VoteWitnessContract contract;
+
+        // set owner address
+        contract.owner_address.size = sizeof(owner_address_decoded);
+        memcpy(contract.owner_address.bytes, owner_address_decoded, sizeof(owner_address_decoded)); // set owner address
+
+        // set the support to true. It's unused in Tron
+        contract.support = true;
+
+        // Set the votes
+        contract.votes_count = msg->contract.vote_witness_contract.votes_count;
+        for (size_t i = 0; i < contract.votes_count; i++)
+        {
+            // set the vote count
+            contract.votes[i].vote_count = msg->contract.vote_witness_contract.votes[i].vote_count; 
+            // set vote address           
+            if (!tron_setContractAddress(contract.votes[i].vote_address.bytes, &contract.votes[i].vote_address.size,
+                                         msg->contract.vote_witness_contract.votes[i].vote_address))
+            {
+                return tron_signingAbort("Cannot decode vote address");
+            }
+        }
+        
+        // encode the contract
+        if (!tron_encodeContract(&tx, "type.googleapis.com/protocol.VoteWitnessContract",
+                                 VoteWitnessContract_fields, &contract))
+        {
+            return tron_signingAbort("Failed to encode VoteWitnessContract");
+        }
+    }
+        
 
     // set timestamp
     tx.raw_data.timestamp = msg->timestamp;

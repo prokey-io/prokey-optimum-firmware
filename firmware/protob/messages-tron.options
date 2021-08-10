@@ -15,3 +15,7 @@ TronTransferAssetContract.to_address                max_size:36
 TronFreezeBalanceContract.receiver_address          max_size:36
 
 TronUnfreezeBalanceContract.receiver_address        max_size:36
+
+TronVote.vote_address                               max_size:36
+
+TronVoteWitnessContract.votes                       max_count:8

@@ -53,8 +53,8 @@ message TronSignTx {
         }
         // Transfer asset
         message TronTransferAssetContract {
-            optional string asset_name = 1;                     // Asset name
-            optional string to_address = 2;                      // To address
+            optional string asset_name = 1;                     // Asset name is token id in hex string ex: "31303030303031"
+            optional string to_address = 2;                     // To address
             optional uint64 amount = 3;                         // Amount to transfer
         }
         // Vote witness
