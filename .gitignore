@@ -7,5 +7,6 @@ build/
 *.o
 *.d
 *.a
+*.pyc
 bl_data.h
 Pipfile.lock

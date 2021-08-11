@@ -65,20 +65,6 @@ message Transaction {
     repeated bytes signature = 2;
 }
 
-message BlockHeader {
-    message raw {
-        int64 timestamp = 1;
-        bytes tx_trie_root = 2;
-        bytes parent_hash = 3;
-        int64 number = 7;
-        int64 witness_id = 8;
-        bytes witness_address = 9;
-        int32 version = 10;
-    }
-    raw raw_data = 1;
-    bytes witness_signature = 2;
-}
-
 message TransferContract {
     bytes owner_address = 1;
     bytes to_address = 2;

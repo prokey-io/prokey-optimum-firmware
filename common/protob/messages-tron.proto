@@ -42,14 +42,10 @@ message TronSignTx {
      *
      */
     message TronContract {
-        // Update account name
-        message TronAccountUpdateContract {
-            optional string account_name = 1;                   // Account name is not unique
-        }
         // Transfer TRX
         message TronTransferContract {
             optional string to_address = 1;                      // To address
-            optional uint64 amount = 2;                         // TRX amount in sun (10^-6)
+            optional uint64 amount = 2;                          // TRX amount in sun (10^-6)
         }
         // Transfer asset
         message TronTransferAssetContract {
@@ -64,14 +60,6 @@ message TronSignTx {
                 optional uint64 vote_count = 2;                 // Amount of votes
             }
             repeated TronVote votes = 1;                        // votes
-        }
-        // Upgrade account to witness
-        message TronWitnessCreateContract {
-            optional string url = 1;                             // Witness URL
-        }
-        // Update witness URL
-        message TronWitnessUpdateContract {
-            optional string update_url = 2;                      // Witness URL
         }
         // Issue Asset
         message TronAssetIssueContract {
@@ -123,39 +111,31 @@ message TronSignTx {
             optional string description = 1;                    // New description
             optional string url = 2;                            // New URL
         }
-        // Network proposal contract
-        message TronProposalCreateContract {
-            message TronProposalParameters {
-                optional uint64 key = 1;                        // Parameter key
-                optional uint64 value = 2;                      // Parameter value
-            }
-            repeated TronProposalParameters parameters = 1;     // Parameter to be changed
-        }
         // Approval contract
         message TronProposalApproveContract {
             optional uint64 proposal_id = 1;                    // Proposal ID
             optional bool is_add_approval = 2;                  // Add or remove approval
         }
-        // Delete proposal
-        message TronProposalDeleteContract {
-            optional uint64 proposal_id = 1;                    // Proposal ID
+        // Trigger smart contract
+        message TronTriggerSmartContract {
+            optional string contract_address = 1;               // The contract address
+            optional int64 call_value = 2;                      // The amount of TRX to send to the contract when triggers.
+            optional bytes data = 3;                            // The parameters to trigger the contract.
+            optional int64 call_token_value = 4;                // The amount of TRC-10 token to send to the contract when triggers.
+            optional int64 token_id = 5;                        // The id of the TRC-10 token to be sent to the contract.
         }
         optional TronTransferContract transfer_contract = 1;
         optional TronTransferAssetContract transfer_asset_contract = 2;
-        optional TronVoteWitnessContract vote_witness_contract = 4;
-        optional TronWitnessCreateContract witness_create_contract = 5;
-        optional TronAssetIssueContract asset_issue_contract = 6;
-        optional TronWitnessUpdateContract witness_update_contract = 8;
-        optional TronParticipateAssetIssueContract participate_asset_issue_contract = 9;
-        optional TronAccountUpdateContract account_update_contract = 10;
-        optional TronFreezeBalanceContract freeze_balance_contract = 11;
-        optional TronUnfreezeBalanceContract unfreeze_balance_contract = 12;
-        optional TronWithdrawBalanceContract withdraw_balance_contract = 13;
-        optional TronUnfreezeAssetContract unfreeze_asset_contract = 14;
-        optional TronUpdateAssetContract update_asset_contract = 15;
-        optional TronProposalCreateContract proposal_create_contract = 16;
-        optional TronProposalApproveContract proposal_approve_contract = 17;
-        optional TronProposalDeleteContract proposal_delete_contract = 18;
+        optional TronVoteWitnessContract vote_witness_contract = 3;
+        optional TronAssetIssueContract asset_issue_contract = 4;
+        optional TronParticipateAssetIssueContract participate_asset_issue_contract = 5;
+        optional TronFreezeBalanceContract freeze_balance_contract = 6;
+        optional TronUnfreezeBalanceContract unfreeze_balance_contract = 7;
+        optional TronWithdrawBalanceContract withdraw_balance_contract = 8;
+        optional TronUnfreezeAssetContract unfreeze_asset_contract = 9;
+        optional TronUpdateAssetContract update_asset_contract = 10;
+        optional TronProposalApproveContract proposal_approve_contract = 11;
+        optional TronTriggerSmartContract trigger_smart_contract = 12;
     }
 }
 

@@ -1,10 +1,6 @@
 Any.type_url                                max_size:65
 Any.value                                   max_size:1024
 
-raw.tx_trie_root                            max_size:65
-raw.parent_hash                             max_size:65
-raw.witness_address                         max_size:128
-
 rawTr.contract                              max_count:1
 rawTr.ref_block_hash                        max_size:8
 rawTr.ref_block_bytes                       max_size:2
@@ -32,3 +28,7 @@ Vote.vote_address                           max_size:21
 
 VoteWitnessContract.owner_address           max_size:21
 VoteWitnessContract.votes                   max_count:8
+
+TriggerSmartContract.owner_address          max_size:21
+TriggerSmartContract.contract_address       max_size:21
+TriggerSmartContract.data                   max_size:1024

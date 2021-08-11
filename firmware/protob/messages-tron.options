@@ -19,3 +19,6 @@ TronUnfreezeBalanceContract.receiver_address        max_size:36
 TronVote.vote_address                               max_size:36
 
 TronVoteWitnessContract.votes                       max_count:8
+
+TronTriggerSmartContract.contract_address           max_size:36
+TronTriggerSmartContract.data                       max_size:1024

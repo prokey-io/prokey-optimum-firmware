@@ -96,6 +96,61 @@ bool tron_encodeContract(Transaction *tx, char *contract_name, const pb_field_t 
     return true;
 }
 
+bool tron_triggerSmartContract(Transaction *tx, const TronTriggerSmartContract *smart_contract,
+                               uint8_t *owner_address_decoded)
+{
+    // check required fileds
+    if (!smart_contract->has_contract_address)
+    {
+        return tron_signingAbort("Contract address is required");
+    }
+    if (!smart_contract->has_data)
+    {
+        return tron_signingAbort("Data is required");
+    }
+    if (smart_contract->has_call_token_value &&
+        !smart_contract->has_token_id)
+    {
+        return tron_signingAbort("Token id is required");
+    }
+
+    tx->raw_data.contract[0].type = ContractType_TriggerSmartContract;
+    TriggerSmartContract contract;
+
+    // set owner address
+    contract.owner_address.size = 21;
+    memcpy(contract.owner_address.bytes, owner_address_decoded, 21); // set owner address
+
+    // set contract address
+    if (!tron_setContractAddress(contract.contract_address.bytes, &contract.contract_address.size,
+                                 smart_contract->contract_address))
+    {
+        return tron_signingAbort("Cannot decode contract address");
+    }
+
+    // set data
+    contract.data.size = smart_contract->data.size;
+    memcpy(contract.data.bytes, smart_contract->data.bytes, contract.data.size);
+
+    // set call value
+    contract.call_value = smart_contract->call_value;
+
+    // set call token value
+    contract.call_token_value = smart_contract->call_token_value;
+
+    // set token id
+    contract.token_id = smart_contract->token_id;
+
+    // encode the contract
+    if (!tron_encodeContract(tx, "type.googleapis.com/protocol.TriggerSmartContract",
+                             TriggerSmartContract_fields, &contract))
+    {
+        return tron_signingAbort("Failed to encode TriggerSmartContract");
+    }
+
+    return true;
+}
+
 bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
 {
     // check required fileds
@@ -141,7 +196,7 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         TransferContract contract;
 
         // set amount
-        contract.amount = msg->contract.transfer_contract.amount; 
+        contract.amount = msg->contract.transfer_contract.amount;
 
         // set owner address
         contract.owner_address.size = sizeof(owner_address_decoded);
@@ -336,7 +391,7 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         // check required fileds
         if (msg->contract.vote_witness_contract.votes_count == 0)
         {
-            return tron_signingAbort("Vote list is empty.");            
+            return tron_signingAbort("Vote list is empty.");
         }
         for (size_t i = 0; i < msg->contract.vote_witness_contract.votes_count; i++)
         {
@@ -349,7 +404,7 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
                 return tron_signingAbort("Vote count is required");
             }
         }
-        
+
         tx.raw_data.contract[0].type = ContractType_VoteWitnessContract;
         VoteWitnessContract contract;
 
@@ -365,15 +420,15 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         for (size_t i = 0; i < contract.votes_count; i++)
         {
             // set the vote count
-            contract.votes[i].vote_count = msg->contract.vote_witness_contract.votes[i].vote_count; 
-            // set vote address           
+            contract.votes[i].vote_count = msg->contract.vote_witness_contract.votes[i].vote_count;
+            // set vote address
             if (!tron_setContractAddress(contract.votes[i].vote_address.bytes, &contract.votes[i].vote_address.size,
                                          msg->contract.vote_witness_contract.votes[i].vote_address))
             {
                 return tron_signingAbort("Cannot decode vote address");
             }
         }
-        
+
         // encode the contract
         if (!tron_encodeContract(&tx, "type.googleapis.com/protocol.VoteWitnessContract",
                                  VoteWitnessContract_fields, &contract))
@@ -381,7 +436,16 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
             return tron_signingAbort("Failed to encode VoteWitnessContract");
         }
     }
-        
+    else if (msg->contract.has_trigger_smart_contract)
+    {
+        //=======================
+        // Trigger smart contract
+        //=======================
+        if (!tron_triggerSmartContract(&tx, &msg->contract.trigger_smart_contract, owner_address_decoded))
+        {
+            return false;
+        }
+    }
 
     // set timestamp
     tx.raw_data.timestamp = msg->timestamp;
