@@ -25,8 +25,10 @@
 #include "pb_encode.h"
 #include "secp256k1.h"
 #include "util.h"
+#include "base58.h"
 
 static const int8_t tron_prefix = 0x41; // Tron addresses must start with T
+static const uint8_t TRANSFER_TOKEN_FUNCTION[] = {169, 5, 156, 187};
 
 HDNode *tron_getAddress(const uint32_t *address_n, uint32_t address_n_count,
                         char *address, uint32_t address_len)
@@ -442,6 +444,52 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         // Trigger smart contract
         //=======================
         if (!tron_triggerSmartContract(&tx, &msg->contract.trigger_smart_contract, owner_address_decoded))
+        {
+            return false;
+        }
+    }
+    else if (msg->contract.has_transfer_trc20)
+    {
+        //=====================
+        // Transfer TRC20 token
+        //=====================
+        // check required fileds
+        if (!msg->contract.transfer_trc20.has_to_address)
+        {
+            return tron_signingAbort("To address is required");
+        }
+        if (!msg->contract.transfer_trc20.has_amount)
+        {
+            return tron_signingAbort("Amount is required");
+        }
+
+        TronTriggerSmartContract contract;
+        size_t size = 0;
+        // set contract address
+        strncpy(contract.contract_address, msg->contract.transfer_trc20.contract_address,
+                sizeof(contract.contract_address));
+        contract.has_contract_address = true;
+        // set TRC20 function
+        size = sizeof(TRANSFER_TOKEN_FUNCTION);
+        memcpy(contract.data.bytes, TRANSFER_TOKEN_FUNCTION, size);
+        // set to address
+        uint8_t to_address[21];
+        if (!tron_decodeAddress(to_address, sizeof(to_address), msg->contract.transfer_trc20.to_address))
+        {
+            return tron_signingAbort("Can not decode to address");
+        }
+        memset(contract.data.bytes + size, 0, 11); // pad the data
+        size += 11;
+        memcpy(contract.data.bytes + size, to_address, 21); // set to address
+        size += 21;
+        // set amount
+        memcpy(contract.data.bytes + size, msg->contract.transfer_trc20.amount.bytes, 32);
+        size += 32;
+        // set data size
+        contract.data.size = size;
+        contract.has_data = true;
+
+        if (!tron_triggerSmartContract(&tx, &contract, owner_address_decoded))
         {
             return false;
         }

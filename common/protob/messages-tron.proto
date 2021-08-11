@@ -124,6 +124,12 @@ message TronSignTx {
             optional int64 call_token_value = 4;                // The amount of TRC-10 token to send to the contract when triggers.
             optional int64 token_id = 5;                        // The id of the TRC-10 token to be sent to the contract.
         }
+        // Transger TRC20
+        message TronTransferTRC20 {                             // This is a helper function to ease sending of TRC20 tokens
+            optional string contract_address = 1;               // The TRC20 contract address
+            optional string to_address = 2;                     // The to address
+            optional bytes amount = 3;                          // <=256 bit unsigned big endian
+        }
         optional TronTransferContract transfer_contract = 1;
         optional TronTransferAssetContract transfer_asset_contract = 2;
         optional TronVoteWitnessContract vote_witness_contract = 3;
@@ -136,6 +142,7 @@ message TronSignTx {
         optional TronUpdateAssetContract update_asset_contract = 10;
         optional TronProposalApproveContract proposal_approve_contract = 11;
         optional TronTriggerSmartContract trigger_smart_contract = 12;
+        optional TronTransferTRC20 transfer_trc20 = 13;
     }
 }
 
