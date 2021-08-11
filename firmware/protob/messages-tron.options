@@ -6,6 +6,7 @@ TronSignTx.address_n                                max_count:8
 TronSignTx.block_id                                 max_size:65
 
 TronSignedTx.serialized_tx                          max_size:2048
+TronSignedTx.signature                              max_size:65
 
 TronTransferContract.to_address                     max_size:36
 

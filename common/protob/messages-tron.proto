@@ -152,4 +152,5 @@ message TronSignTx {
  */
 message TronSignedTx {
     optional bytes serialized_tx = 1;                           // Serialized transaction
+    optional bytes signature = 2;                               // transaction signature
 }

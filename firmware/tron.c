@@ -535,6 +535,11 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
     resp->has_serialized_tx = true;
     resp->serialized_tx.size = stream.bytes_written;
 
+    // copy the signature
+    resp->has_signature = true;
+    memcpy(resp->signature.bytes, tx.signature[0].bytes, tx.signature[0].size);
+    resp->signature.size = tx.signature[0].size;
+
     return true;
 }
 
