@@ -26,6 +26,8 @@
 #include "secp256k1.h"
 #include "util.h"
 #include "base58.h"
+#include "layout2.h"
+#include "protect.h"
 
 static const int8_t tron_prefix = 0x41; // Tron addresses must start with T
 static const uint8_t TRANSFER_TOKEN_FUNCTION[] = {169, 5, 156, 187};
@@ -209,6 +211,16 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
                                      msg->contract.transfer_contract.to_address)) // set to address
         {
             return tron_signingAbort("Cannot decode to address");
+        }
+
+        // Confirm the transaction
+        layoutMiscConfirmTx("TRX", 6, msg->contract.transfer_contract.amount,
+                            msg->contract.transfer_contract.to_address);
+        if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false))
+        {
+            fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+            layoutHome();
+            return false;
         }
 
         // encode the contract
@@ -551,5 +563,6 @@ bool tron_signingAbort(const char *reason)
     }
 
     fsm_sendFailure(FailureType_Failure_ProcessError, reason);
+    layoutHome();
     return false;
 }

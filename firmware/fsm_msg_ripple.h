@@ -293,7 +293,7 @@ void fsm_msgRippleSignTx(RippleSignTx *msg)
         layoutHome();
         return;
     }
-    layoutRippleConfirmTx(msg->payment.amount, msg->payment.destination);
+    layoutMiscConfirmTx("XRP", 6, msg->payment.amount, msg->payment.destination);
     if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false))
     {
         fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);

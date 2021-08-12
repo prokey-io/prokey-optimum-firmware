@@ -987,11 +987,11 @@ void layoutRippleConfirmFee(uint64_t fee)
                     feestr, NULL, NULL, NULL, NULL);  
 }
 
-void layoutRippleConfirmTx(uint64_t amount, char* to)
+void layoutMiscConfirmTx(char* shortcut, int decimals, uint64_t amount, const char* to)
 {
   char* title = "Confirm sending";
   char amountstr[36];
-  bn_format_uint64(amount, NULL, " XRP", 6, 0, false, 
+  bn_format_uint64(amount, NULL, shortcut, decimals, 0, false, 
                    amountstr, sizeof(amountstr));
   strlcat(amountstr, " to", sizeof(amountstr));
   render_address_dialog(NULL, to, title, amountstr, NULL);
