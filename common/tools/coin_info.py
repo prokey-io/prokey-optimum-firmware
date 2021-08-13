@@ -434,7 +434,7 @@ def deduplicate_erc20(buckets, networks):
     def clear_bucket(bucket):
         # allow all coins, except those that are explicitly marked through overrides
         for coin in bucket:
-            if coin not in overrides:
+            if coin not in overrides and not "deprecation" in coin:
                 coin["duplicate"] = False
 
     for bucket in buckets.values():
