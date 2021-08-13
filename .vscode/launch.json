@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["render", "firmware/ethereum_tokens.c.mako"]
+        },
+        {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
@@ -13,9 +21,18 @@
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [
-                {"name":"TREZOR_OLED_SCALE", "value":"3"}, 
-                {"name": "SDL_VIDEO_X11_VISUALID", "value": ""}, 
-                {"name": "LIBGL_ALWAYS_INDIRECT", "value": "1"}
+                {
+                    "name": "TREZOR_OLED_SCALE",
+                    "value": "3"
+                },
+                {
+                    "name": "SDL_VIDEO_X11_VISUALID",
+                    "value": ""
+                },
+                {
+                    "name": "LIBGL_ALWAYS_INDIRECT",
+                    "value": "1"
+                }
             ],
             "externalConsole": false,
             "MIMode": "gdb",
