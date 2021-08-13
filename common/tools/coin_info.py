@@ -540,6 +540,8 @@ def sort_coin_infos(all_coins):
         elif k == "eth":
             # sort ethereum networks by chain_id
             coins.sort(key=lambda c: c["chain_id"])
+        elif k == "erc20":
+            coins.sort(key=lambda c: (c["chain_id"], c["key"].upper()))
         else:
             coins.sort(key=lambda c: c["key"].upper())
 
