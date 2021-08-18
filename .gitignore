@@ -9,3 +9,7 @@ build/
 *.a
 bl_data.h
 Pipfile.lock
+Challenge.h
+Challenge.c
+common/tools/__pycache__/coin_info.cpython-36.pyc
+common/tools/__pycache__/coindef.cpython-36.pyc
