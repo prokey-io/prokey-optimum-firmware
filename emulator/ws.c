@@ -19,10 +19,12 @@
 #include <pthread.h>
 #include "wsServer/include/ws.h"
 #include <string.h>
+#include <SDL2/SDL_mutex.h>
 
 static int last_client_id = 0;
 static unsigned char ws_msg[1024];
 static size_t ws_msg_size = 0;
+static SDL_mutex *ws_mutex = NULL;
 
 /**
  * @brief This function is called whenever a new connection is opened.
@@ -64,32 +66,35 @@ void onmessage(int fd, const unsigned char *msg, size_t size, int type)
     char *cli;
     cli = ws_getaddress(fd);
     printf("I receive a message: %s (%zu), from: %s/%d\n", msg,
-        size, cli, fd);
+           size, cli, fd);
 
+    SDL_LockMutex(ws_mutex);
     last_client_id = fd;
     ws_msg_size = size;
     memcpy(ws_msg, msg, size);
+    SDL_UnlockMutex(ws_mutex);
 
     free(cli);
 }
 
-static void* WebSocketThread(void* _user_data)
+static void *WebSocketThread(void *_user_data)
 {
     (void)_user_data;
     /* Register events. */
     struct ws_events evs;
-    evs.onopen    = &onopen;
-    evs.onclose   = &onclose;
+    evs.onopen = &onopen;
+    evs.onclose = &onclose;
     evs.onmessage = &onmessage;
 
     /* Main loop, this function never returns. */
-    ws_socket(&evs, 55500);    
+    ws_socket(&evs, 55500);
 
     return NULL;
 }
 
 void emulatorWebSocketInit(void)
 {
+    ws_mutex = SDL_CreateMutex();
     pthread_t thread_id;
     pthread_create(&thread_id, NULL, WebSocketThread, NULL);
 }
@@ -98,13 +103,16 @@ size_t emulatorWebSocketRead(int *iface, void *buffer, size_t size)
 {
     (void)size;
     *iface = 0;
+    SDL_LockMutex(ws_mutex);
     if (ws_msg_size > 0)
     {
         memcpy(buffer, ws_msg, ws_msg_size);
         size_t t = ws_msg_size;
         ws_msg_size = 0;
-        return t;        
+        SDL_UnlockMutex(ws_mutex);
+        return t;
     }
+    SDL_UnlockMutex(ws_mutex);
     return 0;
 }
 
