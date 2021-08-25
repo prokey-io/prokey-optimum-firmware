@@ -996,3 +996,43 @@ void layoutMiscConfirmTx(char* shortcut, int decimals, uint64_t amount, const ch
   strlcat(amountstr, " to", sizeof(amountstr));
   render_address_dialog(NULL, to, title, amountstr, NULL);
 }
+
+// Tron layouts
+void layoutTronConfirmFreeze(const uint64_t amount, const char* resource, 
+                             const char* address, const int64_t days)
+{
+  char feestr[32];
+  bn_format_uint64(amount, "Freeze ", " TRX", 6, 0, false, 
+                   feestr, sizeof(feestr));
+
+  // prepare the address  
+  if (address)
+  {
+    int addrlen = strlen(address);
+    int numlines = 2;
+    int linelen = (addrlen - 1) / numlines + 1;
+    if (linelen > 21) {
+      linelen = 21;
+    }
+    const char** addStr = split_message((const uint8_t *)address, addrlen, linelen);
+    char str[32];
+    sprintf(str, "for %d days and send", (int)days);    
+    char str2[32];
+    sprintf(str2, "%s to", resource);
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), 
+                      NULL, feestr, str,
+                      str2, NULL, NULL, NULL);  
+    oledDrawString(20, 3 * 9, addStr[0], FONT_FIXED);
+    oledDrawString(20, 4 * 9, addStr[1], FONT_FIXED);
+    oledRefresh();
+ }
+  else
+  {
+    char str[32];
+    sprintf(str, "for %d days to get", (int)days);    
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), 
+                      NULL, feestr, str,
+                      resource, NULL, NULL, NULL);  
+
+  }
+}

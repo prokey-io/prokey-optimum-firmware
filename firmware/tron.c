@@ -155,6 +155,19 @@ bool tron_triggerSmartContract(Transaction *tx, const TronTriggerSmartContract *
     return true;
 }
 
+static bool tron_ConfirmAction(void)
+{
+    if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false))
+    {
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        layoutHome();
+        return false;
+    }
+    return true;
+}
+
+#define TRON_CONFIRM_ACTION if (!tron_ConfirmAction()) return false;
+
 bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
 {
     // check required fileds
@@ -214,14 +227,9 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
         }
 
         // Confirm the transaction
-        layoutMiscConfirmTx("TRX", 6, msg->contract.transfer_contract.amount,
+        layoutMiscConfirmTx(" TRX", 6, msg->contract.transfer_contract.amount,
                             msg->contract.transfer_contract.to_address);
-        if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false))
-        {
-            fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-            layoutHome();
-            return false;
-        }
+        TRON_CONFIRM_ACTION;
 
         // encode the contract
         if (!tron_encodeContract(&tx, "type.googleapis.com/protocol.TransferContract",
@@ -319,6 +327,17 @@ bool tron_signTransaction(const TronSignTx *msg, TronSignedTx *resp)
 
         // set resource code
         contract.resource = msg->contract.freeze_balance_contract.resource;
+
+        // Confirm the freeze
+        char *resource;
+        if (contract.resource == ResourceCode_ENERGY)
+            resource = "Energy";
+        else
+            resource = "Bandwidth";
+        layoutTronConfirmFreeze(contract.frozen_balance, resource,
+                                msg->contract.freeze_balance_contract.receiver_address,
+                                contract.frozen_duration);
+        TRON_CONFIRM_ACTION;
 
         // encode the contract
         if (!tron_encodeContract(&tx, "type.googleapis.com/protocol.FreezeBalanceContract",

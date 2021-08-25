@@ -99,6 +99,7 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen);
 const char **split_message_hex(const uint8_t *msg, uint32_t len);
 
 // Tron layouts
-
+void layoutTronConfirmFreeze(const uint64_t amount, const char* resource, 
+                             const char* toAddress, const int64_t days);
 
 #endif
