@@ -1006,7 +1006,7 @@ void layoutTronConfirmFreeze(const uint64_t amount, const char* resource,
                    feestr, sizeof(feestr));
 
   // prepare the address  
-  if (address)
+  if (strlen(address) > 0)
   {
     int addrlen = strlen(address);
     int numlines = 2;
