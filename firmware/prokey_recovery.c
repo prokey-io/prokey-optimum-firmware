@@ -177,10 +177,10 @@ void ProRecovery( char isOnlyCheck )
                                     "Yes", 
                                     NULL, 
                                     _("Are you sure"),
+                                    NULL,
                                     tmp,
+                                    NULL,
                                     msg,
-                                    NULL,
-                                    NULL,
                                     NULL);
 
                         eButtons btn = ButtonGet(BTN_YES | BTN_NO);
