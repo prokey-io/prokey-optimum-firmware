@@ -383,6 +383,11 @@ char ProRecoveryGetChar( char* chr )
             isLedNeedUpdate = true;
         }
         else if( button.YesUp ){
+            //! Add Debounce for YES button
+            for( volatile int i=0; i<10000; i++ );
+            // Clear button state
+            buttonUpdate();  
+
             n++;
             if( n != 0 && chr[n] == ' ')
                 chr[n] = 'a';
