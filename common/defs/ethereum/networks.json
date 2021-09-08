@@ -317,5 +317,18 @@
     "rskip60": false,
     "url": "https://pirl.io",
     "blockbook": []
+  },
+  {
+    "chain": "bsc",
+    "chain_id": 56,
+    "slip44": 60,
+    "shortcut": "BNB",
+    "name": "Binance Smart Chain",
+    "rskip60": false,
+    "url": "https://www.binance.org/en/smartChain",
+    "blockbook": [
+      "https://etc1.trezor.io"
+    ]
   }
+
 ]

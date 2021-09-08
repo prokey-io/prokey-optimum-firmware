@@ -434,14 +434,14 @@ def deduplicate_erc20(buckets, networks):
     def clear_bucket(bucket):
         # allow all coins, except those that are explicitly marked through overrides
         for coin in bucket:
-            if coin not in overrides:
+            if coin not in overrides and not "deprecation" in coin:
                 coin["duplicate"] = False
 
     for bucket in buckets.values():
         # Only check buckets that contain purely ERC20 tokens. Collision with
         # a non-token is always forbidden.
-        if not all(is_token(c) for c in bucket):
-            continue
+        #if not all(is_token(c) for c in bucket):
+        #    continue
 
         splits = (symbol_from_shortcut(coin["shortcut"]) for coin in bucket)
         suffixes = {suffix for _, suffix in splits}
@@ -449,9 +449,20 @@ def deduplicate_erc20(buckets, networks):
         if len(suffixes) == len(bucket) and all(suffixes):
             clear_bucket(bucket)
             continue
+        
+        # If tokens are on diffrent chains remove duplicate
+        all_on_dif_chains = True
+        for i in range(len(bucket)):
+            for j in range(i + 1, len(bucket)):
+                if bucket[i]["key"] == bucket[j]["key"]:
+                    all_on_dif_chains = False
+        
+        if all_on_dif_chains:
+            clear_bucket(bucket)
+            continue
 
         # protected categories:
-        testnets = [coin for coin in bucket if coin["chain"] in testnet_networks]
+        testnets = [coin for coin in bucket if is_token(coin) and coin["chain"] in testnet_networks]
         deprecated_by_same = [
             coin
             for coin in bucket
@@ -529,6 +540,8 @@ def sort_coin_infos(all_coins):
         elif k == "eth":
             # sort ethereum networks by chain_id
             coins.sort(key=lambda c: c["chain_id"])
+        elif k == "erc20":
+            coins.sort(key=lambda c: (c["chain_id"], c["key"].upper()))
         else:
             coins.sort(key=lambda c: c["key"].upper())
 
