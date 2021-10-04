@@ -1,3 +1,6 @@
+Version 1.10.3
+* Improve wallet recovery and mnemonic check process
+
 Version 1.10.2
 * Update ERC20 tokens
 * Add Binance Smart Chain to ETH Networks
