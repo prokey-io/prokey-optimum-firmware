@@ -27,6 +27,7 @@
 #define FLASH_OTP_BLOCK_SIZE 32
 
 #define FLASH_OTP_BLOCK_RANDOMNESS 3
+#define FLASH_OTP_MA_KEY_BLOCK 15
 
 bool flash_otp_is_locked(uint8_t block);
 bool flash_otp_lock(uint8_t block);

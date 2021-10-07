@@ -129,6 +129,15 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			return;
 		}
 
+    //! Get Authenticate status
+    if (msg_id == 0xFFF3)
+    {
+      sAuthResponse ar;
+      AuthStatus(&ar);
+      SendPacketToUsb( dev, 0xFFF4, ar.response, ar.len);
+      return;
+    }
+
     if (msg_id == 0x0000) 
     {  // Initialize message (id 0)
       send_msg_features(dev);

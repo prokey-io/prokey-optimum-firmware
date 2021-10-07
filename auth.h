@@ -8,7 +8,7 @@ typedef struct _sAuth {
     unsigned char   serRand[16];
     unsigned char   prvMagic[4];
     unsigned char   sessionKeyHash[32];
-    char            cmdMySerial[32];
+    unsigned char   cmdMySerial[32];
     bool            isGetRandomBefore;
     bool            isChallengingOkay;
 } sAuth;
@@ -22,6 +22,7 @@ typedef struct _sAuthResponse {
 void            AuthInit        ( void );
 bool            AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthResponse* res, unsigned char* err );
 bool            AuthIsOkay      ( void );
-sAuth*          AuthGet         ( void );         
+sAuth*          AuthGet         ( void );
+void            AuthStatus      ( sAuthResponse* res );
 
 #endif //! AUTH_H

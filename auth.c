@@ -25,6 +25,7 @@
 #include "sha2.h"
 #include "aes/aes.h"
 #include <stdbool.h>
+#include <otp.h>
 
 static sAuth auth;
 //********************************
@@ -306,4 +307,36 @@ bool            AuthIsOkay      ( void )
 sAuth*          AuthGet         ( void )
 {
     return &auth;
+}
+//********************************
+// This function returns the status
+// Protobuf Schema for reference
+// message MsgAuthStatus
+// {
+//     required uint32 	    AuthVersion	= 1;
+//     required bytes 		SerialNumber = 2;
+//     required bool		IsOtpSet = 3;
+// }
+//********************************
+void AuthStatus ( sAuthResponse* res )
+{
+    //! Protobuf section
+    //! Varint, Field 1
+    res->response[0] = 0x08;
+
+    //! Version 1
+    res->response[1] = 0x01;
+
+    //! Length-delimited[32], Field 2
+    res->response[2] = 0x12;
+    //! Lenght
+    res->response[3] = 32;
+    SerialNumberGet32(&res->response[4]);
+
+    //! Varint, Field 3
+    res->response[36] = 0x18;
+    res->response[37] = flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK) ? 0x01 : 0x00;
+
+    res->isErr = false;
+    res->len = 38;
 }
