@@ -26,6 +26,7 @@
         "fsm.h": "c",
         "base58.h": "c",
         "types.h": "c",
-        "layout.h": "c"
+        "layout.h": "c",
+        "pin_number.h": "c"
     },
 }

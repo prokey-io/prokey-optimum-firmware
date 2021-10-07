@@ -14,6 +14,7 @@ ifneq ($(EMULATOR),1)
 OBJS += setup.o
 OBJS += serialno.o
 OBJS += auth.o
+OBJS += otp.o
 endif
 
 OBJS += util.o
