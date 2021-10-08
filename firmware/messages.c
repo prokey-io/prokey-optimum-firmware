@@ -250,14 +250,13 @@ void MsgAuthenticate( const unsigned char* msg_in )
 void MsgAuthenticate( const unsigned char* msg_in )
 {
 	sAuthResponse ar;
-	uint8_t err=0x40;
 	unsigned char buf[64];
 
 	memcpy( buf, msg_in, 64 );
 	
-	if( AuthNext( buf, 0, &ar, &err ) == false )
+	if( AuthNext( buf, 0, &ar ) == false )
 	{
-		unsigned char data[] = { 0x08, err };
+		unsigned char data[] = { 0x08, ar.response[0] };
 
 		MsgWriteOutRaw( 0x0003, data, 2 );
 

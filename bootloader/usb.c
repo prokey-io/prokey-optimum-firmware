@@ -102,21 +102,20 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
     //! Prokey Commands
 		//! Prokey Restart (id 65520)
-		if (msg_id == 0xFFF0) 
+		if (msg_id == USB_MSG_ID_RESTART_REG) 
 		{		
 			DeviceReset(false);
 			return;
 		}
 
 		//! Prokey Challenge (id 65521)
-		if (msg_id == 0xFFF1) 
+		if (msg_id == USB_MSG_ID_CHALLENGE_REQ) 
 		{ 	
 			flash_state = STATE_OPEN;
 			sAuthResponse ar;
-			uint8_t err=0x40;
-			if( AuthNext( buf, 9, &ar, &err ) == false )
+			if( AuthNext( buf, 9, &ar ) == false )
 			{
-				sendMsgFailureWithReason(dev, err);
+				sendMsgFailureWithReason(dev, ar.response[0]);
 				return;
 			}
 
@@ -125,17 +124,48 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         layoutDialog(&bmp_icon_info, NULL, NULL, NULL, "Your Prokey is", "genuine", NULL, NULL, NULL, NULL);
       }
 
-			SendPacketToUsb( dev, 0xFFF1, ar.response, ar.len );
+			SendPacketToUsb( dev, USB_MSG_ID_CHALLENGE_RES, ar.response, ar.len );
 			return;
 		}
 
     //! Get Authenticate status
-    if (msg_id == 0xFFF3)
+    if (msg_id == USB_MSG_ID_AUTH_STAT_REQ)
     {
       sAuthResponse ar;
       AuthStatus(&ar);
-      SendPacketToUsb( dev, 0xFFF4, ar.response, ar.len);
+      SendPacketToUsb( dev, USB_MSG_ID_AUTH_STAT_RES, ar.response, ar.len);
       return;
+    }
+
+    //! Request to set the AuthKey in OTP
+    if(msg_id == USB_MSG_ID_SET_OTP_REQ)
+    {
+      sAuthResponse ar;
+      //! If OTP is already set, the function returns error
+      if( AuthSetKey(&ar) == false )
+      {
+        sendMsgFailureWithReason(dev, ar.response[0]);
+      }
+      else
+      {
+        SendPacketToUsb( dev, USB_MSG_ID_SET_OTP_RES, ar.response, ar.len);
+      }
+
+      return;
+    }
+
+    //! Request ACK
+    if(msg_id == USB_MSG_ID_OTP_WRITE_REQ)
+    {
+      sAuthResponse ar;
+      if(AuthWriteAuthKeyToOpt(buf, 9, &ar) == false)
+      {
+        sendMsgFailureWithReason(dev, ar.response[0]);
+      }
+      else
+      {
+        SendPacketToUsb(dev, USB_MSG_ID_OTP_WRITE_RES, ar.response, ar.len);
+      }
     }
 
     if (msg_id == 0x0000) 

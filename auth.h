@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#define AUTH_KEY_VERSION 0x01
+
 typedef struct _sAuth {
     unsigned char   devRand[16];
     unsigned char   serRand[16];
@@ -14,15 +16,16 @@ typedef struct _sAuth {
 } sAuth;
 
 typedef struct _sAuthResponse {
-    bool            isErr;
     unsigned char   response[128];
     unsigned char   len;
 } sAuthResponse;
 
-void            AuthInit        ( void );
-bool            AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthResponse* res, unsigned char* err );
-bool            AuthIsOkay      ( void );
-sAuth*          AuthGet         ( void );
-void            AuthStatus      ( sAuthResponse* res );
+void            AuthInit                ( void );
+bool            AuthNext                ( unsigned char* buf, unsigned char fistByteIndex, sAuthResponse* res );
+bool            AuthIsOkay              ( void );
+sAuth*          AuthGet                 ( void );
+void            AuthStatus              ( sAuthResponse* res );
+bool            AuthSetKey              ( sAuthResponse* res );
+bool            AuthWriteAuthKeyToOpt   ( unsigned char* buf, unsigned char fistByteIndex, sAuthResponse* res );
 
 #endif //! AUTH_H

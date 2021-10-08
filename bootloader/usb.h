@@ -20,6 +20,19 @@
 #ifndef __USB_H__
 #define __USB_H__
 
+#define USB_MSG_ID_RESTART_REG      0xFFF0
+#define USB_MSG_ID_CHALLENGE_REQ    0xFFF1
+#define USB_MSG_ID_CHALLENGE_RES    0xFFF1 // Same as REQ
+
+#define USB_MSG_ID_AUTH_STAT_REQ    0xFFF3
+#define USB_MSG_ID_AUTH_STAT_RES    0xFFF4
+
+#define USB_MSG_ID_SET_OTP_REQ      0xFFF5
+#define USB_MSG_ID_SET_OTP_RES      0xFFF6
+
+#define USB_MSG_ID_OTP_WRITE_REQ    0xFFF7
+#define USB_MSG_ID_OTP_WRITE_RES    0xFFF8
+
 void usbLoop(void);
 
 #endif

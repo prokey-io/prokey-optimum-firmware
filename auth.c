@@ -1,6 +1,7 @@
 /*
  * PROKEY HARDWARE WALLET
  * Copyright (C) Prokey.io
+ * Hadi Robati <hadi@prokey.io>
 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +15,13 @@
 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ * ----------- MUTUAL AUTHENTICATION -----------
+ * It is a security process in which Prokey Device and Server authenticate each other
+ * before secure communication occurs. This authentication is mandatory for updating or installing
+ * the device firmware. After authentication, sending the firmware raw bin file from server
+ * will be encrypted using a unique generated session key. This secure communication does not use
+ * in normal wallet operation.
 */
 
 #include "auth.h"
@@ -28,6 +36,8 @@
 #include <otp.h>
 
 static sAuth auth;
+static unsigned char _tmpAuthKey[32];
+static unsigned char _isTmpAuthKeySet = 0x55;
 //********************************
 //
 //********************************
@@ -48,7 +58,7 @@ void            AuthInit        ( void )
 //     optional bytes					CheckHash			= 5;  -> Field: 0x28
 // }
 //********************************
-bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthResponse* res, unsigned char* err )
+bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthResponse* res)
 {
     unsigned char n = fistByteIndex;
 
@@ -56,14 +66,14 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
     //! for reqType, the first byte should be 0x08 which means Field: 1, type: varint
     if( buf[n++] != 0x08 )
     {
-        *err = 0x40;
+        res->response[0] = 0x40;
         return false;
     }
 
     unsigned char reqType = buf[n++]; 
     if (reqType < 1 || reqType > 4) 
     {
-        *err = 0x41;
+        res->response[0] = 0x41;
         return false;
     }
 
@@ -99,7 +109,6 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         res->response[37] = 16;
         memcpy(&res->response[38], auth.devRand, 16);
 
-        res->isErr = false;
         res->len = 6+16+32;
         
         auth.isGetRandomBefore = true;
@@ -112,7 +121,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
     {
         if( auth.isGetRandomBefore == false )
         {
-            *err = 0x42;
+            res->response[0] = 0x42;
             return false;
         }
 
@@ -131,7 +140,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
             //! Check size and type
             if( size != 16 || (typeAndField & 0x07) != 0x02 )
             {
-                *err = 0x43;
+                res->response[0] = 0x43;
                 return false;
             }
 
@@ -146,7 +155,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
                 dp = challenge;
             else
             {
-                *err = 0x44;
+                res->response[0] = 0x44;
                 return false;
             }
 
@@ -171,7 +180,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         {
             if(challenge[i] != aesMyRandom[i])
             {
-                *err = 0x45;
+                res->response[0] = 0x45;
                 return false;
             }
         }
@@ -195,8 +204,6 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         for( int i=0; i<16; i++ ) 
             res->response[i+38] = aesSerRnd[i];
         
-        //SendPacketToUsb( dev, 0xFFF1, response, 16+4+34);
-        res->isErr = false;
         res->len = 16+4+34;
 
         return true;
@@ -211,7 +218,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
 
         if( size != 32 || typeAndField != 0x2A)
         {
-            *err = 0x46;
+            res->response[0] = 0x46;
             return false;
         }
 
@@ -267,7 +274,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         {
             if( sessionKeyHash2[i] != checkhash[i] )
             {
-                *err = 0x47;
+                res->response[0] = 0x47;
                 return false;
             }
         }
@@ -285,13 +292,12 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         res->response[3] = 32;
         memcpy(&res->response[4], auth.cmdMySerial, 32);
         
-        res->isErr = false;
         res->len = 36;
 
         return true;
     }
 
-    *err = 0x48;
+    res->response[0] = 0x48;
     return false;
 }
 //********************************
@@ -325,7 +331,7 @@ void AuthStatus ( sAuthResponse* res )
     res->response[0] = 0x08;
 
     //! Version 1
-    res->response[1] = 0x01;
+    res->response[1] = AUTH_KEY_VERSION;
 
     //! Length-delimited[32], Field 2
     res->response[2] = 0x12;
@@ -334,9 +340,134 @@ void AuthStatus ( sAuthResponse* res )
     SerialNumberGet32(&res->response[4]);
 
     //! Varint, Field 3
-    res->response[36] = 0x18;
-    res->response[37] = flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK) ? 0x01 : 0x00;
+    res->response[35] = 0x18;
+    res->response[36] = flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK) ? 0x01 : 0x00;
 
-    res->isErr = false;
-    res->len = 38;
+    res->len = 37;
+}
+//********************************
+// This function sets the AuthKey for the first time in Prokey Production Line but won't 
+// write it into OTP until receiving next command to make sure server store it
+// Protobuf Schema for reference
+// message MsgSetKey
+// {
+//     required uint32 	    AuthVersion	= 1;
+//     required bytes 		SerialNumber = 2;
+//     required bytes		AuthKey = 3;
+// }
+//********************************
+bool            AuthSetKey      ( sAuthResponse* res )
+{
+    //! Key can only be set once
+    if(flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK))
+    {
+        //! Error code 0x50: Key already set 
+        res->response[0] = 0x50;
+        return false;
+    }
+
+    //! Protobuf section
+    //! Varint, Field 1
+    res->response[0] = 0x08;
+
+    //! Version 1
+    res->response[1] = AUTH_KEY_VERSION;
+
+    //! Length-delimited[32], Field 2
+    res->response[2] = 0x12;
+    //! Lenght
+    res->response[3] = 32;
+    SerialNumberGet32(&res->response[4]);
+
+    //! Length-delimited[32], Field 3
+    res->response[35] = 0x1A;
+    //! Lenght
+    res->response[36] = 32;
+
+    //! Generate random numbers
+    for( int i=0; i<32; i++ )
+        res->response[i+37] = random32();
+    
+    //! Hash the numbers 3 times
+    for( int h=0; h<3; h++)
+    {
+        sha256_Raw(&res->response[37], 32, _tmpAuthKey);
+        for( int i=0; i<32; i++ )
+            res->response[i+37] = _tmpAuthKey[i];
+    }
+
+    _isTmpAuthKeySet = 0xAA;
+    res->len = 70;
+
+    return true;
+}
+//********************************
+// This function writes the AuthKey to OPT Block 15
+// Protobuf Schema for reference
+// message MsgWriteReq
+// {
+//     required bytes 		Hash[AuthKey] = 2;
+// }
+//
+// message MsgWriteAck
+// {
+//     required uint32 	    AuthVersion	= 1;
+//     required bytes 		SerialNumber = 2;
+// }
+//********************************
+bool AuthWriteAuthKeyToOpt(unsigned char* buf, unsigned char fistByteIndex, sAuthResponse* res)
+{
+    //! Check if _tmpAuthKey is set
+    if(_isTmpAuthKeySet != 0xAA)
+    {
+        res->response[0] = 0x51;
+        return false;
+    }
+
+    // Field 1, Length-delimited
+    if(buf[fistByteIndex++] != 0x0A) 
+    {
+        res->response[0] = 0x52;
+        return false;
+    }
+
+    // Length should be 32
+    if(buf[fistByteIndex++] != 32) 
+    {
+        res->response[0] = 0x53;
+        return false;
+    }
+
+    unsigned char hashAuthKey[32];
+    sha256_Raw(_tmpAuthKey, 32, hashAuthKey);
+    for(int i=0; i<32; i++)
+    {
+        if(hashAuthKey[i] != buf[fistByteIndex+i])
+        {
+            res->response[0] = 0x54;
+            return false;
+        }
+    }
+
+    if(flash_otp_write(FLASH_OTP_MA_KEY_BLOCK, 0, _tmpAuthKey, 32) == false)
+    {
+        res->response[0] = 0x55;
+        return false;
+    }
+
+    //! Protobuf section
+    //! Varint, Field 1
+    res->response[0] = 0x08;
+
+    //! Version 1
+    res->response[1] = AUTH_KEY_VERSION;
+
+    //! Length-delimited[32], Field 2
+    res->response[2] = 0x12;
+    //! Lenght
+    res->response[3] = 32;
+    SerialNumberGet32(&res->response[4]);
+
+    res->len = 36;
+    return true;
 }
