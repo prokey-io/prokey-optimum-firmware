@@ -37,7 +37,7 @@
 
 static sAuth auth;
 static unsigned char _tmpAuthKey[32];
-static unsigned char _isTmpAuthKeySet = 0x55;
+static unsigned char _isTmpAuthKeySet = AUTH_FALSE;
 //********************************
 //
 //********************************
@@ -66,14 +66,14 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
     //! for reqType, the first byte should be 0x08 which means Field: 1, type: varint
     if( buf[n++] != 0x08 )
     {
-        res->response[0] = 0x40;
+        res->response[0] = AUTH_ERR_PROTOBUF;
         return false;
     }
 
     unsigned char reqType = buf[n++]; 
     if (reqType < 1 || reqType > 4) 
     {
-        res->response[0] = 0x41;
+        res->response[0] = AUTH_ERR_REQ_TYPE;
         return false;
     }
 
@@ -121,7 +121,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
     {
         if( auth.isGetRandomBefore == false )
         {
-            res->response[0] = 0x42;
+            res->response[0] = AUTH_ERR_RNDD_NOT_SET;
             return false;
         }
 
@@ -140,7 +140,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
             //! Check size and type
             if( size != 16 || (typeAndField & 0x07) != 0x02 )
             {
-                res->response[0] = 0x43;
+                res->response[0] = AUTH_ERR_DATA_SIZE;
                 return false;
             }
 
@@ -155,7 +155,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
                 dp = challenge;
             else
             {
-                res->response[0] = 0x44;
+                res->response[0] = AUTH_ERR_TYPE;
                 return false;
             }
 
@@ -180,7 +180,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         {
             if(challenge[i] != aesMyRandom[i])
             {
-                res->response[0] = 0x45;
+                res->response[0] = AUTH_ERR_CHALLENGE_FAILED;
                 return false;
             }
         }
@@ -218,7 +218,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
 
         if( size != 32 || typeAndField != 0x2A)
         {
-            res->response[0] = 0x46;
+            res->response[0] = AUTH_ERR_DATA_SIZE;
             return false;
         }
 
@@ -274,7 +274,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         {
             if( sessionKeyHash2[i] != checkhash[i] )
             {
-                res->response[0] = 0x47;
+                res->response[0] = AUTH_ERR_SESSION_ERR;
                 return false;
             }
         }
@@ -297,7 +297,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         return true;
     }
 
-    res->response[0] = 0x48;
+    res->response[0] = AUTH_ERR_CHALLENGE_UNKNOWN;
     return false;
 }
 //********************************
@@ -362,7 +362,7 @@ bool            AuthSetKey      ( sAuthResponse* res )
     if(flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK))
     {
         //! Error code 0x50: Key already set 
-        res->response[0] = 0x50;
+        res->response[0] = AUTH_ERR_KEY_ALREADY_SET;
         return false;
     }
 
@@ -396,7 +396,7 @@ bool            AuthSetKey      ( sAuthResponse* res )
             res->response[i+37] = _tmpAuthKey[i];
     }
 
-    _isTmpAuthKeySet = 0xAA;
+    _isTmpAuthKeySet = AUTH_TRUE;
     res->len = 70;
 
     return true;
@@ -418,23 +418,23 @@ bool            AuthSetKey      ( sAuthResponse* res )
 bool AuthWriteAuthKeyToOpt(unsigned char* buf, unsigned char fistByteIndex, sAuthResponse* res)
 {
     //! Check if _tmpAuthKey is set
-    if(_isTmpAuthKeySet != 0xAA)
+    if(_isTmpAuthKeySet != AUTH_TRUE)
     {
-        res->response[0] = 0x51;
+        res->response[0] = AUTH_ERR_KEY_NOT_SET;
         return false;
     }
 
     // Field 1, Length-delimited
     if(buf[fistByteIndex++] != 0x0A) 
     {
-        res->response[0] = 0x52;
+        res->response[0] = AUTH_ERR_PROTOBUF;
         return false;
     }
 
     // Length should be 32
     if(buf[fistByteIndex++] != 32) 
     {
-        res->response[0] = 0x53;
+        res->response[0] = AUTH_ERR_DATA_SIZE;
         return false;
     }
 
@@ -444,14 +444,14 @@ bool AuthWriteAuthKeyToOpt(unsigned char* buf, unsigned char fistByteIndex, sAut
     {
         if(hashAuthKey[i] != buf[fistByteIndex+i])
         {
-            res->response[0] = 0x54;
+            res->response[0] = AUTH_ERR_KEY_HASH_WRONG;
             return false;
         }
     }
 
     if(flash_otp_write(FLASH_OTP_MA_KEY_BLOCK, 0, _tmpAuthKey, 32) == false)
     {
-        res->response[0] = 0x55;
+        res->response[0] = AUTH_ERR_KEY_WRITE_ERR;
         return false;
     }
 
