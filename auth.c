@@ -163,10 +163,21 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
                 *dp++ = buf[n++];
         }
 
-        // THIS KEY HERE IS ONLY FOR TEST AND THIS IS NOT THE KEY OFFICIAL PROKEY DEVICE IS USING FOR SURE.
-        // OFFICIAL PROKEY USES AN ALGORITHM TO GENERATE THIS KEY AND DOES NOT USE THE SAME KEY FOR EACH SESSION.
-        // YOU CAN CHANGE THIS KEY FOR YOUR OWN TEST
-        uint8_t key[32] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+        //! Is Key set?
+        if(flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK) == false)
+        {
+            //! Error code 0x51: Key not set 
+            res->response[0] = AUTH_ERR_KEY_NOT_SET;
+            return false;
+        }
+
+        uint8_t key[32] = {0};
+        if( flash_otp_read(FLASH_OTP_MA_KEY_BLOCK, 0, key, 32) == false )
+        {
+            //! Error code 0x54: Can not read the key
+            res->response[0] = AUTH_ERR_KEY_READ_ERR;
+            return false;
+        }
 
         uint8_t aesMyRandom[16];
 
@@ -231,41 +242,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         uint8_t m=0;
         uint8_t j=0;
 
-        // THIS ALGORITHM HERE IS ONLY FOR TEST AND THIS IS NOT THE ALGORITHM OFFICIAL PROKEY DEVICE IS USING.
-        // YOU CAN CHANGE THIS KEY FOR YOUR OWN TEST
-
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.serRand[m++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[m++]; // S
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.devRand[m++]; // D
-        sessionKey[z++] = auth.serRand[m++]; // S
-        sessionKey[z++] = auth.serRand[j++]; // S
-        sessionKey[z++] = auth.serRand[j++]; // S
+        // TODO: Generate Session Key
 
         sha256_Raw( sessionKey, 32, auth.sessionKeyHash );
         sha256_Raw( auth.sessionKeyHash, 32, sessionKeyHash2 );

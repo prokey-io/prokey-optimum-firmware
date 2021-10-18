@@ -21,6 +21,7 @@
 #define AUTH_ERR_KEY_NOT_SET        0x51
 #define AUTH_ERR_KEY_HASH_WRONG     0x52
 #define AUTH_ERR_KEY_WRITE_ERR      0x53
+#define AUTH_ERR_KEY_READ_ERR       0x54
 
 
 typedef struct _sAuth {
