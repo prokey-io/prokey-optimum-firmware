@@ -248,12 +248,12 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
             return false;
         }
 
-        //! Hash the KEY for 3 times to make the session key
+        //! Hash the Key for 3 times to make the session key
         sha256_Raw( key, 32, sessionKey );
         sha256_Raw( sessionKey, 32, key );
         sha256_Raw( key, 32, sessionKey );
 
-        //! Hash Session key once more to make the session key hash and compare it to what server made   
+        //! Hash the sessionKey once more to make the sessionKeyHash and compare it to what server made   
         sha256_Raw( sessionKey, 32, sessionKeyHash2 );
 
         //! This step is necessary to make sure all steps are done correctly
