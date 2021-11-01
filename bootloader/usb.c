@@ -317,7 +317,6 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 						}
 
 						const uint32_t *w = (uint32_t *)&plain[i];
-						//const uint32_t *w = (uint32_t *)&toDecript[i];
 						flash_program_word(FLASH_APP_START + flash_pos, *w);
 						flash_pos += 4;
 					}
@@ -373,6 +372,17 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 		// flashing done
 		if (flash_pos == flash_len) 
 		{
+      //! The reason we check the SP here is that flashing the firmware is a time consuming process and this time prevents attacker(man in the middle) to
+      //! brute force different Encrypted Key
+      //TODO: Better to check a magic to make sure Encrypted Key is correct.
+      if((stackPointer & 0x2FFE0000) != 0x20000000)
+      {
+        send_msg_failure(dev);
+        flash_state = STATE_END;
+        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SP");
+        return;
+      }
+
 			flash_unlock();
 			flash_program_word(FLASH_APP_START, stackPointer);
 			flash_lock();

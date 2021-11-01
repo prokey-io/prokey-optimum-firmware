@@ -236,17 +236,27 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         for( int i=0; i<32; i++ )
             checkhash[i] = buf[n++];
 
-        uint8_t sessionKeyHash2[32];
         uint8_t sessionKey[32];
-        uint8_t z=0;
-        uint8_t m=0;
-        uint8_t j=0;
+        uint8_t sessionKeyHash2[32];
 
-        // TODO: Generate Session Key
+        //! Read Key to generate the session key
+        uint8_t key[32] = {0};
+        if( flash_otp_read(FLASH_OTP_MA_KEY_BLOCK, 0, key, 32) == false )
+        {
+            //! Error code 0x54: Can not read the key
+            res->response[0] = AUTH_ERR_KEY_READ_ERR;
+            return false;
+        }
 
-        sha256_Raw( sessionKey, 32, auth.sessionKeyHash );
-        sha256_Raw( auth.sessionKeyHash, 32, sessionKeyHash2 );
+        //! Hash the KEY for 3 times to make the session key
+        sha256_Raw( key, 32, sessionKey );
+        sha256_Raw( sessionKey, 32, key );
+        sha256_Raw( key, 32, sessionKey );
 
+        //! Hash Session key once more to make the session key hash and compare it to what server made   
+        sha256_Raw( sessionKey, 32, sessionKeyHash2 );
+
+        //! This step is necessary to make sure all steps are done correctly
         for( int i=0; i<32; i++ )
         {
             if( sessionKeyHash2[i] != checkhash[i] )
@@ -254,6 +264,15 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
                 res->response[0] = AUTH_ERR_SESSION_ERR;
                 return false;
             }
+        }
+
+        //! The sessionKeyHash will be used for encrypting device firmware
+        //! Although the source code of firmware(this source code) is open, The reason we encrypt the firmware 
+        //! is that to make sure there is no man in the middle/proxy who try to poison the 
+        //! device firmware while updating the it.
+        for( int i=0; i<32; i++ )
+        {
+            auth.sessionKeyHash[i] = sessionKey[i];
         }
 
         auth.isChallengingOkay = true;
