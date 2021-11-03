@@ -336,10 +336,10 @@ void AuthStatus ( sAuthResponse* res )
     SerialNumberGet32(&res->response[4]);
 
     //! Varint, Field 3
-    res->response[35] = 0x18;
-    res->response[36] = flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK) ? 0x01 : 0x00;
+    res->response[36] = 0x18;
+    res->response[37] = flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK) ? 0x01 : 0x00;
 
-    res->len = 37;
+    res->len = 38;
 }
 //********************************
 // This function sets the AuthKey for the first time in Prokey Production Line but won't 
@@ -376,20 +376,19 @@ bool            AuthSetKey      ( sAuthResponse* res )
     SerialNumberGet32(&res->response[4]);
 
     //! Length-delimited[32], Field 3
-    res->response[35] = 0x1A;
+    res->response[36] = 0x1A;
     //! Lenght
-    res->response[36] = 32;
+    res->response[37] = 32;
 
     //! Generate random numbers
     for( int i=0; i<32; i++ )
-        res->response[i+37] = random32();
+        res->response[i+38] = random32();
     
     //! Hash the numbers 3 times
     for( int h=0; h<3; h++)
     {
-        sha256_Raw(&res->response[37], 32, _tmpAuthKey);
-        for( int i=0; i<32; i++ )
-            res->response[i+37] = _tmpAuthKey[i];
+        sha256_Raw(&res->response[38], 32, _tmpAuthKey);
+        memcpy(&res->response[38], _tmpAuthKey, 32);
     }
 
     _isTmpAuthKeySet = AUTH_TRUE;
