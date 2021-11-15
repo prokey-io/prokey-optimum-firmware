@@ -313,11 +313,11 @@ sAuth*          AuthGet         ( void )
 //********************************
 // This function returns the status
 // Protobuf Schema for reference
-// message MsgAuthStatus
+// message MsgAuthKey
 // {
 //     required uint32 	    AuthVersion	= 1;
 //     required bytes 		SerialNumber = 2;
-//     required bool		IsOtpSet = 3;
+//     optional bool		IsOtpSet = 3;
 // }
 //********************************
 void AuthStatus ( sAuthResponse* res )
@@ -345,11 +345,11 @@ void AuthStatus ( sAuthResponse* res )
 // This function sets the AuthKey for the first time in Prokey Production Line but won't 
 // write it into OTP until receiving next command to make sure server store it
 // Protobuf Schema for reference
-// message MsgSetKey
+// message MsgAuthKey
 // {
 //     required uint32 	    AuthVersion	= 1;
 //     required bytes 		SerialNumber = 2;
-//     required bytes		AuthKey = 3;
+//     optional bytes		AuthKey = 4;
 // }
 //********************************
 bool            AuthSetKey      ( sAuthResponse* res )
@@ -376,7 +376,7 @@ bool            AuthSetKey      ( sAuthResponse* res )
     SerialNumberGet32(&res->response[4]);
 
     //! Length-delimited[32], Field 3
-    res->response[36] = 0x1A;
+    res->response[36] = 0x22;
     //! Lenght
     res->response[37] = 32;
 
@@ -404,7 +404,7 @@ bool            AuthSetKey      ( sAuthResponse* res )
 //     required bytes 		Hash[AuthKey] = 2;
 // }
 //
-// message MsgWriteAck
+// message MsgAuthKey
 // {
 //     required uint32 	    AuthVersion	= 1;
 //     required bytes 		SerialNumber = 2;
@@ -463,6 +463,10 @@ bool AuthWriteAuthKeyToOpt(unsigned char* buf, unsigned char fistByteIndex, sAut
     res->response[3] = 32;
     SerialNumberGet32(&res->response[4]);
 
-    res->len = 36;
+    //! Varint, Field 3
+    res->response[36] = 0x18;
+    res->response[37] = flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK) ? 0x01 : 0x00;
+
+    res->len = 38;
     return true;
 }
