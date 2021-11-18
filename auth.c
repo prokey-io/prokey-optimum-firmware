@@ -435,6 +435,7 @@ bool AuthWriteAuthKeyToOpt(unsigned char* buf, unsigned char fistByteIndex, sAut
 
     unsigned char hashAuthKey[32];
     sha256_Raw(_tmpAuthKey, 32, hashAuthKey);
+    
     for(int i=0; i<32; i++)
     {
         if(hashAuthKey[i] != buf[fistByteIndex+i])
@@ -449,6 +450,14 @@ bool AuthWriteAuthKeyToOpt(unsigned char* buf, unsigned char fistByteIndex, sAut
         res->response[0] = AUTH_ERR_KEY_WRITE_ERR;
         return false;
     }
+
+    if(flash_otp_lock(FLASH_OTP_MA_KEY_BLOCK) == false) 
+    {
+        res->response[0] = AUTH_ERR_KEY_WRITE_ERR;
+        return false;
+    }
+
+    memset(_tmpAuthKey, 0, 32);
 
     //! Protobuf section
     //! Varint, Field 1

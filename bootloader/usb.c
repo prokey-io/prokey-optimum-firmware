@@ -166,6 +166,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       {
         SendPacketToUsb(dev, USB_MSG_ID_OTP_WRITE_RES, ar.response, ar.len);
       }
+      return;
     }
 
     if (msg_id == 0x0000) 
@@ -190,7 +191,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if( AuthIsOkay() == false )
   {
-    sendMsgFailureWithReason(dev, 0x49);
+    sendMsgFailureWithReason(dev, AUTH_ERR_UNAUTHORIZED);
     return;
   }
 

@@ -90,15 +90,18 @@ static void SendPacketToUsb( usbd_device *dev, unsigned short msgId, unsigned ch
 	unsigned char buffer[64];
 	unsigned int n=0;
 
-	memset(buffer, 0, 64);
+  memset(buffer, 0, 64);
 
+  //! Start bytes
 	buffer[n++] = '?';
 	buffer[n++] = '#';
 	buffer[n++] = '#';
 
+  //! Message ID
 	buffer[n++] = (msgId >> 8) & 0xFF;
 	buffer[n++] = msgId & 0xFF;
 
+  //! Data lenght
 	buffer[n++] = (dataLenght >> 24) & 0xFF;
 	buffer[n++] = (dataLenght >> 16) & 0xFF;
 	buffer[n++] = (dataLenght >> 8) & 0xFF;
@@ -108,21 +111,19 @@ static void SendPacketToUsb( usbd_device *dev, unsigned short msgId, unsigned ch
 	{
 		buffer[n++] = data[i];
 
-		if(n == 63)
+    //! Send packets of 64 bytes
+		if(n == 64)
 		{
 			while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, buffer, 64) != 64 ) {}
 			memset(buffer, 0, 64);
-			buffer[0] = '?';
-			n = 1;
+      buffer[0] = '?';
+      n = 1;
 		}
 	}
 
+  //! Send the rest of data
 	if(n > 1)
 	{
-		while( n < 64 )
-		{
-			buffer[n++] = 0;
-		}
 		while ( usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, buffer, 64) != 64 ) {}
 	}
 }
