@@ -22,6 +22,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
 static SDL_Texture *prokey_texture = NULL;
@@ -73,10 +74,10 @@ void oledInit(void)
   g_scale = scale;
   int fullscreen = emulatorFullscreen();
 
-  SDL_Window *window = SDL_CreateWindow(
+  window = SDL_CreateWindow(
       "Prokey", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
       (OLED_WIDTH + ex_width) * scale, (OLED_HEIGHT + ex_height) * scale,
-      fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0 | SDL_WINDOW_OPENGL);
+      fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0 | SDL_WINDOW_OPENGL | SDL_WINDOW_ALWAYS_ON_TOP);
 
   if (window == NULL)
   {
@@ -217,6 +218,20 @@ void emulatorPoll(void)
     {
       g_MouseIsDown = true;
       g_MouseEvent = event.button;
+      oledRefresh();
     }    
+    else if (event.type == SDL_KEYUP)
+    {
+      oledRefresh();
+      if (event.key.keysym.scancode == SDL_SCANCODE_H)
+      {
+        SDL_SetWindowBordered(window, SDL_FALSE);
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_K)
+      {
+        SDL_SetWindowBordered(window, SDL_TRUE);
+      }
+    }
+    
   }
 }
