@@ -44,12 +44,13 @@ static uint32_t wordCount = 0;
 // How many words has the user already entered.
 static uint32_t wordIndex = 0;
 
-static char isUsePassphrase = 0;
-
 static char words[24][12];
 
 //**********************************
-//
+// 1 -> 1st
+// 2 -> 2nd
+// 3 -> 3th
+// ....
 //**********************************
 static void ProkeyRecoveryFormatNumber(char *dest, int number, int x) 
 {
@@ -110,7 +111,7 @@ void ProRecovery( char isOnlyCheck )
         char chr[3] = {0};
         if( ProRecoveryGetChar(chr) == 1 )
         {
-            char foundedWords = ProRecoveryGetSuggestions( chr, tmpList);
+            char foundedWords = ProRecoveryGetSuggestions(chr, tmpList);
             if( foundedWords > 0 )
             {
                 int itemCounter = 0;
@@ -124,14 +125,16 @@ void ProRecovery( char isOnlyCheck )
                     ly = 0;
                     for( int i=0; i<foundedWords; i++)
                     {
-                        oledDrawString(1, i*9 + 10, tmpList[i+wc], FONT_STANDARD);
+                        oledDrawString(1, i*18 + 10, tmpList[i+wc], FONT_DOUBLE);
                         if(++ly > 4)
                             break;   
                     }
 
-                    oledInvert(0, y*9 + 10, 127, y*9 + 17);
-                    oledHLine( OLED_HEIGHT-9);
-                    oledDrawString(0, OLED_HEIGHT-7, "Cancel   Up           Down        OK", FONT_STANDARD);
+                    oledInvert(0, y*18 + 10, 127, y*18 + 25);
+
+                    //! There is no more space to show buttons' function because of FONT_DOUBLE size
+                    //oledHLine( OLED_HEIGHT-9);
+                    //oledDrawString(0, OLED_HEIGHT-7, "Cancel   Up           Down        OK", FONT_STANDARD);
                     oledRefresh();
 
                     buttonUpdate();
@@ -143,9 +146,9 @@ void ProRecovery( char isOnlyCheck )
                         itemCounter++;
                         y++;
 
-                        if( y > 4 )
+                        if( y > 2 )
                         {
-                            y = 4;
+                            y = 2;
                             wc++;
                         }
                     }
@@ -166,104 +169,122 @@ void ProRecovery( char isOnlyCheck )
                     else if( button.YesUp )
                     {
                         const char* tmp = tmpList[itemCounter];
-                        strcpy(words[wordIndex], tmp);
-                        wordIndex++;
 
-                        if( wordIndex >= wordCount )
+                        char msg[] = "is your ##th word?";
+                        ProkeyRecoveryFormatNumber(msg, wordIndex+1, 8);
+                        layoutDialog(&bmp_icon_question, 
+                                    "Back", 
+                                    "Yes", 
+                                    NULL, 
+                                    _("Are you sure"),
+                                    NULL,
+                                    tmp,
+                                    NULL,
+                                    msg,
+                                    NULL);
+
+                        eButtons btn = ButtonGet(BTN_YES | BTN_NO);
+                        if(btn == BTN_YES)
                         {
-                            char new_mnemonic[MAX_MNEMONIC_LEN + 1] = {0};
+                            strcpy(words[wordIndex], tmp);
+                            wordIndex++;
 
-                            strlcpy(new_mnemonic, words[0], sizeof(new_mnemonic));
-                            for (uint32_t i = 1; i < wordCount; i++) {
-                                strlcat(new_mnemonic, " ", sizeof(new_mnemonic));
-                                strlcat(new_mnemonic, words[i], sizeof(new_mnemonic));
-                            } 
-
-                            int check = mnemonic_check(new_mnemonic);
-                            if( check == 0 )
+                            if( wordIndex >= wordCount )
                             {
-                                layoutDialog(&bmp_icon_error, "Exit", "Retry", NULL,
-                                    "The seed is INVALID",
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    NULL
-                                );
+                                char new_mnemonic[MAX_MNEMONIC_LEN + 1] = {0};
 
-                                eButtons btn = ButtonGet(BTN_YES | BTN_NO);
-                                if( btn == BTN_NO )
-                                    return;
-                                else
-                                {
-                                    wordIndex = 0;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                if( isOnlyCheck == 0 )
-                                {
-                                    config_setU2FCounter(0);
-                                    config_setImported(true);
-                                    config_setMnemonic(new_mnemonic);
+                                strlcpy(new_mnemonic, words[0], sizeof(new_mnemonic));
+                                for (uint32_t i = 1; i < wordCount; i++) {
+                                    strlcat(new_mnemonic, " ", sizeof(new_mnemonic));
+                                    strlcat(new_mnemonic, words[i], sizeof(new_mnemonic));
+                                } 
 
-                                    layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, 
-                                        "Wallet created",
+                                int check = mnemonic_check(new_mnemonic);
+                                if( check == 0 )
+                                {
+                                    layoutDialog(&bmp_icon_error, "Exit", "Retry", NULL,
+                                        "The seed is INVALID",
                                         NULL,
-                                        "You may unplug your",
-                                        "Prokey now.",
                                         NULL,
-                                        "Go to Prokey.io"
+                                        NULL,
+                                        NULL,
+                                        NULL
                                     );
 
-                                    memzero(new_mnemonic, sizeof(new_mnemonic));
-
-                                    while(true);
+                                    btn = ButtonGet(BTN_YES | BTN_NO);
+                                    if( btn == BTN_NO )
+                                        return;
+                                    else
+                                    {
+                                        wordIndex = 0;
+                                        break;
+                                    }
                                 }
                                 else
                                 {
-                                    char current_mnemonic[MAX_MNEMONIC_LEN + 1] = {0};
-                                    config_getMnemonic(current_mnemonic, sizeof(current_mnemonic));
-
-                                    if( strcmp(current_mnemonic, new_mnemonic) == 0 )
+                                    if( isOnlyCheck == 0 )
                                     {
-                                        layoutDialog( &bmp_icon_ok, NULL, _("OK"), NULL,
-                                            "The seed is correct",
-                                            "and matches the",
-                                            "one in the device",
+                                        config_setU2FCounter(0);
+                                        config_setImported(true);
+                                        config_setMnemonic(new_mnemonic);
+
+                                        layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, 
+                                            "Wallet created",
                                             NULL,
+                                            "You may unplug your",
+                                            "Prokey now.",
                                             NULL,
-                                            NULL
+                                            "Go to Prokey.io"
                                         );
 
-                                        ButtonGet(BTN_YES);
-                                        layoutHome();
-                                        layoutLast = layoutHome;
-                                        return;
+                                        memzero(new_mnemonic, sizeof(new_mnemonic));
+
+                                        while(true);
                                     }
-                                    else 
+                                    else
                                     {
-                                        layoutDialog( &bmp_icon_ok, NULL, _("OK"), NULL,
-                                            "The seed is correct",
-                                            "but does NOT matches",
-                                            "the one in the device",
-                                            NULL,
-                                            NULL,
-                                            NULL
-                                        );
+                                        char current_mnemonic[MAX_MNEMONIC_LEN + 1] = {0};
+                                        config_getMnemonic(current_mnemonic, sizeof(current_mnemonic));
 
-                                        ButtonGet(BTN_YES);
-                                        layoutHome();
-                                        layoutLast = layoutHome;
-                                        return;
+                                        if( strcmp(current_mnemonic, new_mnemonic) == 0 )
+                                        {
+                                            layoutDialog( &bmp_icon_ok, NULL, _("OK"), NULL,
+                                                "The seed is correct",
+                                                "and matches the",
+                                                "one in the device",
+                                                NULL,
+                                                NULL,
+                                                NULL
+                                            );
+
+                                            ButtonGet(BTN_YES);
+                                            layoutHome();
+                                            layoutLast = layoutHome;
+                                            return;
+                                        }
+                                        else 
+                                        {
+                                            layoutDialog( &bmp_icon_ok, NULL, _("OK"), NULL,
+                                                "The seed is correct",
+                                                "but does NOT matches",
+                                                "the one in the device",
+                                                NULL,
+                                                NULL,
+                                                NULL
+                                            );
+
+                                            ButtonGet(BTN_YES);
+                                            layoutHome();
+                                            layoutLast = layoutHome;
+                                            return;
+                                        }
+
                                     }
-
                                 }
                             }
-                        }
 
-                        break;
+                            break;
+                        }
                     }
 
                     for( volatile int w=0; w < 599999; w++ );
@@ -311,7 +332,7 @@ char ProRecoveryGetSuggestions( char chrToFind[3], char sugg[15][12] )
     int isFind = 0;
     while(*wl)
     {
-        if( strncmp(chrToFind, *wl, 2) == 0 )
+        if( strncmp(chrToFind, *wl, 3) == 0 )
         {
             strcpy(sugg[isFind], *wl);
 
@@ -331,6 +352,7 @@ char ProRecoveryGetChar( char* chr )
     int n = 0;
     chr[0] = 'a';
     chr[1] = ' ';
+    chr[2] = ' ';
     int x = 5; 
     int y = 23; 
 
@@ -361,20 +383,24 @@ char ProRecoveryGetChar( char* chr )
             isLedNeedUpdate = true;
         }
         else if( button.YesUp ){
+            //! Add Debounce for YES button
+            for( volatile int i=0; i<10000; i++ );
+            // Clear button state
+            buttonUpdate();  
+
             n++;
-            if( n == 1 && chr[n] == ' ')
+            if( n != 0 && chr[n] == ' ')
                 chr[n] = 'a';
 
-            if( n == 2 ){
+            if( n == 3 ){
                 return 1;
             }
 
             isLedNeedUpdate = 1;
         }
         else if( button.NoUp ){
+            chr[n] = ' ';
             n--;
-            if( n == 0 )
-                chr[1] = ' ';
 
             if( n == -1 )
                 return 0;
@@ -391,18 +417,26 @@ char ProRecoveryGetChar( char* chr )
 
             if( n == 0 )
                 oledDrawString( 1, 12, _("Choose the 1st character:"), FONT_STANDARD);
-            else 
+            else if(n == 1)
                 oledDrawString( 1, 12, _("Choose the 2nd character:"), FONT_STANDARD);
+            else
+                oledDrawString( 1, 12, _("Choose the 3rd character:"), FONT_STANDARD);
 
             oledDrawChar(x + 2, y, chr[0], FONT_DOUBLE);
             oledDrawChar(x + 2 + 19, y, chr[1], FONT_DOUBLE);
+            oledDrawChar(x + 2 + 38, y, chr[2], FONT_DOUBLE);
 
-            if( n == 0 ){
+            if( n == 0 )
+            {
                 oledInvert(x, y-1, x+19, y+16);
+            }
+            else if(n == 1)
+            {
+                oledInvert(x+19, y-1, x+37, y+16);
             }
             else
             {
-                oledInvert(x+19, y-1, x+37, y+16);
+                oledInvert(x+38, y-1, x+56, y+16);
             }
 
             oledHLine( OLED_HEIGHT-10);
@@ -416,7 +450,7 @@ char ProRecoveryGetChar( char* chr )
 
         if( button.DownDown != 0 || button.UpDown != 0 ){
 
-            for( volatile int i=0; i<1599999; i++ );
+            for( volatile int i=0; i<2000000; i++ );
         }
     }
 }
@@ -497,30 +531,5 @@ void ProRecoveryGetNumberOfWords()
             return;
         }
     }
-}
-//**********************************
-//
-//**********************************
-void ProRecoveryIsPassphrase()
-{
-    layoutDialog(&bmp_icon_question, "No", "Yes", NULL,
-        "Did you set passphrase?",
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL);
-    
-    eButtons btn = ButtonGet(BTN_YES | BTN_NO);
-    if( btn == BTN_YES )
-    {
-        isUsePassphrase = 1;
-    }
-    else
-    {
-        isUsePassphrase = 0;
-    }
-    
-    return;
 }
 

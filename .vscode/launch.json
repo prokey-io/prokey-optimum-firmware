@@ -9,7 +9,17 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": ["render", "firmware/ethereum_tokens.h.mako"]
+        },
+        {
+            "name": "Python: Make coins.json",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceRoot}/common/tools/cointool.py",
+            "console": "integratedTerminal",
+            "args": ["dump", "-p", "-o", "coins.json", "-d", "trezor1", "-e", "key", "-e", "maintainer", 
+            "-e", "blockbook", "-e", "logo", "-e", "social", "-e", "ens_address", "-e", "icon"]
         },
         {
             "name": "(gdb) Launch",

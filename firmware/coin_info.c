@@ -56,7 +56,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Actinium",
 	.coin_shortcut = " ACM",
-	.maxfee_kb = 40000000,
+	.maxfee_kb = 160000000000,
 	.signed_message_header = "\x19" "Actinium Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -79,7 +79,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Axe",
 	.coin_shortcut = " AXE",
-	.maxfee_kb = 100000,
+	.maxfee_kb = 130000000000,
 	.signed_message_header = "\x19" "DarkCoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -102,7 +102,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "BitCash",
 	.coin_shortcut = " BITC",
-	.maxfee_kb = 30000000,
+	.maxfee_kb = 280000000000,
 	.signed_message_header = "\x18" "Bitcash Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -125,7 +125,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Bitcloud",
 	.coin_shortcut = " BTDX",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 490000000000,
 	.signed_message_header = "\x18" "Diamond Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -148,7 +148,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Bcash",
 	.coin_shortcut = " BCH",
-	.maxfee_kb = 500000,
+	.maxfee_kb = 9400000,
 	.signed_message_header = "\x18" "Bitcoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -194,7 +194,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Bgold",
 	.coin_shortcut = " BTG",
-	.maxfee_kb = 500000,
+	.maxfee_kb = 100000000,
 	.signed_message_header = "\x1d" "Bitcoin Gold Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -240,7 +240,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Bprivate",
 	.coin_shortcut = " BTCP",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 4200000000,
 	.signed_message_header = "\x1f" "BitcoinPrivate Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -263,7 +263,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Bitcore",
 	.coin_shortcut = " BTX",
-	.maxfee_kb = 2000000,
+	.maxfee_kb = 11000000000,
 	.signed_message_header = "\x18" "BitCore Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -286,7 +286,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Bitsend",
 	.coin_shortcut = " BSD",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 330000000000,
 	.signed_message_header = "\x18" "Bitsend Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -309,7 +309,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Dash",
 	.coin_shortcut = " DASH",
-	.maxfee_kb = 100000,
+	.maxfee_kb = 28000000,
 	.signed_message_header = "\x19" "DarkCoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -355,7 +355,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Decred",
 	.coin_shortcut = " DCR",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 36000000,
 	.signed_message_header = "\x17" "Decred Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -424,7 +424,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "DigiByte",
 	.coin_shortcut = " DGB",
-	.maxfee_kb = 500000,
+	.maxfee_kb = 110000000000,
 	.signed_message_header = "\x19" "DigiByte Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -447,7 +447,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Dogecoin",
 	.coin_shortcut = " DOGE",
-	.maxfee_kb = 1000000000,
+	.maxfee_kb = 21000000000,
 	.signed_message_header = "\x19" "Dogecoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -470,7 +470,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Feathercoin",
 	.coin_shortcut = " FTC",
-	.maxfee_kb = 40000000,
+	.maxfee_kb = 190000000000,
 	.signed_message_header = "\x1c" "Feathercoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -493,7 +493,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Flashcoin",
 	.coin_shortcut = " FLASH",
-	.maxfee_kb = 4000000,
+	.maxfee_kb = 1200000000000,
 	.signed_message_header = "\x1a" "Flashcoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -539,7 +539,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Fujicoin",
 	.coin_shortcut = " FJC",
-	.maxfee_kb = 1000000000,
+	.maxfee_kb = 12000000000000,
 	.signed_message_header = "\x19" "FujiCoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -562,7 +562,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Gincoin",
 	.coin_shortcut = " GIN",
-	.maxfee_kb = 100000,
+	.maxfee_kb = 140000000000,
 	.signed_message_header = "\x19" "DarkCoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -585,7 +585,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "GameCredits",
 	.coin_shortcut = " GAME",
-	.maxfee_kb = 5000000,
+	.maxfee_kb = 41000000000,
 	.signed_message_header = "\x1c" "GameCredits Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -608,7 +608,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Groestlcoin",
 	.coin_shortcut = " GRS",
-	.maxfee_kb = 100000,
+	.maxfee_kb = 7200000000,
 	.signed_message_header = "\x1c" "GroestlCoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -654,7 +654,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Komodo",
 	.coin_shortcut = " KMD",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 6400000000,
 	.signed_message_header = "\x17" "Komodo Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -700,7 +700,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Litecoin",
 	.coin_shortcut = " LTC",
-	.maxfee_kb = 40000000,
+	.maxfee_kb = 34000000,
 	.signed_message_header = "\x19" "Litecoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -746,7 +746,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Megacoin",
 	.coin_shortcut = " MEC",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 820000000000000000,
 	.signed_message_header = "\x19" "MegaCoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -769,7 +769,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Monacoin",
 	.coin_shortcut = " MONA",
-	.maxfee_kb = 5000000,
+	.maxfee_kb = 10000000,
 	.signed_message_header = "\x19" "Monacoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -792,7 +792,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "MonetaryUnit",
 	.coin_shortcut = " MUE",
-	.maxfee_kb = 100000,
+	.maxfee_kb = 840000000000,
 	.signed_message_header = "\x1d" "MonetaryUnit Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -815,7 +815,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Myriad",
 	.coin_shortcut = " XMY",
-	.maxfee_kb = 2000000,
+	.maxfee_kb = 1300000000000,
 	.signed_message_header = "\x1b" "Myriadcoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -838,7 +838,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "NIX",
 	.coin_shortcut = " NIX",
-	.maxfee_kb = 40000000,
+	.maxfee_kb = 140000000000,
 	.signed_message_header = "\x14" "NIX Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -861,7 +861,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Namecoin",
 	.coin_shortcut = " NMC",
-	.maxfee_kb = 10000000,
+	.maxfee_kb = 3500000000,
 	.signed_message_header = "\x19" "Namecoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -884,7 +884,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "PIVX",
 	.coin_shortcut = " PIVX",
-	.maxfee_kb = 100000,
+	.maxfee_kb = 8500000000,
 	.signed_message_header = "\x18" "DarkNet Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -953,7 +953,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Primecoin",
 	.coin_shortcut = " XPM",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 44000000000,
 	.signed_message_header = "\x1a" "Primecoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -976,7 +976,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Qtum",
 	.coin_shortcut = " QTUM",
-	.maxfee_kb = 40000000,
+	.maxfee_kb = 740000000,
 	.signed_message_header = "\x15" "Qtum Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -1022,7 +1022,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Ravencoin",
 	.coin_shortcut = " RVN",
-	.maxfee_kb = 2000000,
+	.maxfee_kb = 75000000000,
 	.signed_message_header = "\x1a" "Ravencoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -1068,7 +1068,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "SmartCash",
 	.coin_shortcut = " SMART",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 780000000000,
 	.signed_message_header = "\x1a" "SmartCash Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -1114,7 +1114,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Stakenet",
 	.coin_shortcut = " XSN",
-	.maxfee_kb = 2000000,
+	.maxfee_kb = 31000000000,
 	.signed_message_header = "\x19" "DarkCoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -1137,7 +1137,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Vertcoin",
 	.coin_shortcut = " VTC",
-	.maxfee_kb = 40000000,
+	.maxfee_kb = 9500000000,
 	.signed_message_header = "\x19" "Vertcoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -1160,7 +1160,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Viacoin",
 	.coin_shortcut = " VIA",
-	.maxfee_kb = 40000000,
+	.maxfee_kb = 11000000000,
 	.signed_message_header = "\x18" "Viacoin Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -1183,7 +1183,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "ZClassic",
 	.coin_shortcut = " ZCL",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 28000000000,
 	.signed_message_header = "\x16" "Zcash Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,
@@ -1206,7 +1206,7 @@ const CoinInfo coins[COINS_COUNT] = {
 {
 	.coin_name = "Zcash",
 	.coin_shortcut = " ZEC",
-	.maxfee_kb = 1000000,
+	.maxfee_kb = 43000000,
 	.signed_message_header = "\x16" "Zcash Signed Message:\n",
 	.has_address_type = true,
 	.has_address_type_p2sh = true,

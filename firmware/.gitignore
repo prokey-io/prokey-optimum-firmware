@@ -3,3 +3,5 @@
 *.a
 *.bin
 *.elf
+*.zip
+bl_data.h
