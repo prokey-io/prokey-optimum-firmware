@@ -20,62 +20,91 @@
 #include "oled.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
-static SDL_Rect dstrect;
+static SDL_Texture *prokey_texture = NULL;
+static SDL_Rect dstrect, prokey_srcrect;
+static int ex_width = 20;
+static int ex_height = 118;
+SDL_MouseButtonEvent g_MouseEvent;
+bool g_MouseIsDown = false;
+int g_scale = 1;
 
 #define ENV_OLED_FULLSCREEN "TREZOR_OLED_FULLSCREEN"
 #define ENV_OLED_SCALE "TREZOR_OLED_SCALE"
 
-static int emulatorFullscreen(void) {
+static int emulatorFullscreen(void)
+{
   const char *variable = getenv(ENV_OLED_FULLSCREEN);
-  if (!variable) {
+  if (!variable)
+  {
     return 0;
   }
   return atoi(variable);
 }
 
-static int emulatorScale(void) {
+static int emulatorScale(void)
+{
   const char *variable = getenv(ENV_OLED_SCALE);
-  if (!variable) {
+  if (!variable)
+  {
     return 1;
   }
   int scale = atoi(variable);
-  if (scale >= 1 && scale <= 16) {
+  if (scale >= 1 && scale <= 16)
+  {
     return scale;
   }
   return 1;
 }
 
-void oledInit(void) {
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+void oledInit(void)
+{
+  if (SDL_Init(SDL_INIT_VIDEO) != 0)
+  {
     fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
     exit(1);
   }
   atexit(SDL_Quit);
 
   int scale = emulatorScale();
+  g_scale = scale;
   int fullscreen = emulatorFullscreen();
 
   SDL_Window *window = SDL_CreateWindow(
-      "Prokey^emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-      OLED_WIDTH * scale, OLED_HEIGHT * scale,
-      fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0 | SDL_WINDOW_OPENGL );
+      "Prokey", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+      (OLED_WIDTH + ex_width) * scale, (OLED_HEIGHT + ex_height) * scale,
+      fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0 | SDL_WINDOW_OPENGL);
 
-  if (window == NULL) {
+  if (window == NULL)
+  {
     fprintf(stderr, "Failed to create window: %s\n", SDL_GetError());
     exit(1);
   }
 
+  // load support for the PNG image formats
+  int flags = IMG_INIT_PNG;
+  int initted = IMG_Init(flags);
+  if ((initted & flags) != flags)
+  {
+    printf("IMG_Init: Failed to init required jpg and png support!\n");
+    printf("IMG_Init: %s\n", IMG_GetError());
+    exit(1);
+  }
+
   renderer = SDL_CreateRenderer(window, -1, 0);
-  if (!renderer) {
+  if (!renderer)
+  {
     fprintf(stderr, "Failed to create renderer: %s\n", SDL_GetError());
     exit(1);
   }
-  if (fullscreen) {
+  if (fullscreen)
+  {
     SDL_DisplayMode current_mode;
-    if (SDL_GetCurrentDisplayMode(0, &current_mode) != 0) {
+    if (SDL_GetCurrentDisplayMode(0, &current_mode) != 0)
+    {
       fprintf(stderr, "Failed to get current display mode: %s\n",
               SDL_GetError());
       exit(1);
@@ -87,9 +116,11 @@ void oledInit(void) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
     SDL_ShowCursor(SDL_DISABLE);
-  } else {
-    dstrect.x = 0;
-    dstrect.y = 0;
+  }
+  else
+  {
+    dstrect.x = (ex_width * scale) / 2;
+    dstrect.y = (53 * scale) / 2;
   }
 
   dstrect.w = OLED_WIDTH * scale;
@@ -99,11 +130,34 @@ void oledInit(void) {
       SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
                         SDL_TEXTUREACCESS_STREAMING, OLED_WIDTH, OLED_HEIGHT);
 
+
+  // load the image into ram memory using SDL_image library function
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
+  SDL_Surface* prokey_surface = IMG_Load("../prokey.png");
+  if (!prokey_surface)
+  {
+    printf("error creating surface: %s \n", SDL_GetError());
+    exit(1);
+  }
+  // load the image data into the graphics hardware's memory
+  prokey_texture = SDL_CreateTextureFromSurface(renderer, prokey_surface);
+  SDL_FreeSurface(prokey_surface);
+  if (!prokey_texture)
+  {
+    printf("error creating texture: %s\n", SDL_GetError());
+    exit(1);
+  }
+  prokey_srcrect.x = 31;
+  prokey_srcrect.y = 17;
+  prokey_srcrect.w = 318;
+  prokey_srcrect.h = 390;
+
   oledClear();
   oledRefresh();
 }
 
-void oledRefresh(void) {
+void oledRefresh(void)
+{
   /* Draw triangle in upper right corner */
   oledInvertDebugLink();
 
@@ -111,33 +165,42 @@ void oledRefresh(void) {
 
   static uint32_t data[OLED_HEIGHT][OLED_WIDTH];
 
-  for (size_t i = 0; i < OLED_BUFSIZE; i++) {
+  for (size_t i = 0; i < OLED_BUFSIZE; i++)
+  {
     int x = (OLED_BUFSIZE - 1 - i) % OLED_WIDTH;
     int y = (OLED_BUFSIZE - 1 - i) / OLED_WIDTH * 8 + 7;
 
-    for (uint8_t shift = 0; shift < 8; shift++, y--) {
+    for (uint8_t shift = 0; shift < 8; shift++, y--)
+    {
       bool set = (buffer[i] >> shift) & 1;
-      data[y][x] = set ? 0xFFFFFFFF : 0xFF000000;
+      data[y][x] = set ? 0xFF15E6ED : 0xFF000000;
     }
   }
 
   SDL_UpdateTexture(texture, NULL, data, OLED_WIDTH * sizeof(uint32_t));
+
+  SDL_RenderCopy(renderer, prokey_texture, &prokey_srcrect, NULL);
   SDL_RenderCopy(renderer, texture, NULL, &dstrect);
+
   SDL_RenderPresent(renderer);
 
   /* Return it back */
   oledInvertDebugLink();
 }
 
-void emulatorPoll(void) {
-  SDL_Event event;
+void emulatorPoll(void)
+{
+  SDL_Event event;  
 
-  if (SDL_PollEvent(&event)) {
-    if (event.type == SDL_QUIT) {
+  if (SDL_PollEvent(&event))
+  {
+    g_MouseIsDown = false;
+    if (event.type == SDL_QUIT)
+    {
       exit(1);
     }
     else if (event.type == SDL_WINDOWEVENT)
-    {      
+    {
       switch (event.window.event)
       {
       case SDL_WINDOWEVENT_FOCUS_GAINED:
@@ -145,10 +208,15 @@ void emulatorPoll(void) {
       case SDL_WINDOWEVENT_EXPOSED:
         oledRefresh();
         break;
-      
+
       default:
         break;
-      }      
+      }
     }
+    else if (event.type == SDL_MOUSEBUTTONDOWN)
+    {
+      g_MouseIsDown = true;
+      g_MouseEvent = event.button;
+    }    
   }
 }
