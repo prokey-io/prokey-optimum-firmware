@@ -1,3 +1,6 @@
+Version 3.0.0 [Nov 2021]
+* Save Authentication Key in OTP
+
 Version 1.8.0 [Feb 2019]
 * Make the update process more similar to Model T process
 

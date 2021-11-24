@@ -27,7 +27,6 @@
 #include "auth.h"
 #include <string.h>
 #include "rng.h"
-//#include "Challenge.h"
 #include "serialno.h"
 #include "util.h"
 #include "sha2.h"
