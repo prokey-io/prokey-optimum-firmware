@@ -399,6 +399,9 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			return;
 		}
   }
+
+  //! MsgId not supported
+  sendMsgFailureWithReason(dev, 0xFF);
 }
 
 static void set_config(usbd_device *dev, uint16_t wValue) {
