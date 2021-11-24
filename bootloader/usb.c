@@ -169,20 +169,20 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       return;
     }
 
-    if (msg_id == 0x0000) 
+    if (msg_id == USB_MSG_ID_INITIALIZE) 
     {  // Initialize message (id 0)
       send_msg_features(dev);
       flash_state = STATE_OPEN;
       return;
     }
 
-    if (msg_id == 0x0037) 
+    if (msg_id == USB_MSG_ID_GET_FEATURES) 
     {  // GetFeatures message (id 55)
       send_msg_features(dev);
       return;
     }
 
-    if (msg_id == 0x0001) 
+    if (msg_id == USB_MSG_ID_PING) 
     {  // Ping message (id 1)
       send_msg_success(dev);
       return;
@@ -197,7 +197,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if (flash_state == STATE_READY || flash_state == STATE_OPEN)
   {
-    if (msg_id == 0x0005) 
+    if (msg_id == USB_MSG_ID_WIPE) 
     {  // WipeDevice message (id 5)
       layoutDialog(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
       bool but = get_button_response();
@@ -227,7 +227,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if (flash_state == STATE_OPEN) 
   {
-    if (msg_id == 0x0006) 
+    if (msg_id == USB_MSG_ID_ERASE_FIRMWARE) 
     {  // FirmwareErase message (id 6)
 
       bool proceed = false;
@@ -262,7 +262,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if (flash_state == STATE_FLASHSTART) 
   {
-    if(msg_id == 0x0007)
+    if(msg_id == USB_MSG_ID_WRITE_FIRMWARE)
 		{
 			//! Firmware Lenght
 			//! Length-delimited type

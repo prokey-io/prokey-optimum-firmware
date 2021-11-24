@@ -20,6 +20,13 @@
 #ifndef __USB_H__
 #define __USB_H__
 
+#define USB_MSG_ID_INITIALIZE       0x0000
+#define USB_MSG_ID_PING             0x0001
+#define USB_MSG_ID_WIPE             0x0005
+#define USB_MSG_ID_ERASE_FIRMWARE   0x0006
+#define USB_MSG_ID_WRITE_FIRMWARE   0x0007
+#define USB_MSG_ID_GET_FEATURES     0x0037
+
 #define USB_MSG_ID_RESTART_REG      0xFFF0
 #define USB_MSG_ID_CHALLENGE_REQ    0xFFF1
 #define USB_MSG_ID_CHALLENGE_RES    0xFFF1 // Same as REQ
