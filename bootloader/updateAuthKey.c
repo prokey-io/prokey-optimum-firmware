@@ -26,17 +26,17 @@ void UpdateAuthKey  ( void )
         if(*(volatile unsigned int *)(keyIndex+4) != 0x4B657931) // 0x4B657931 = Key1
             continue;
 
-        if(*(volatile unsigned char *)(keyIndex+9) != 32) // 32 is len
+        if(*(volatile unsigned char *)(keyIndex+8) != 32) // 32 is len
             continue;
         
         //! Check if key set correctly
-        if(*(volatile unsigned int *)(keyIndex+10) == 0 && *(volatile unsigned int *)(keyIndex+14) == 0)
+        if(*(volatile unsigned int *)(keyIndex+9) == 0 && *(volatile unsigned int *)(keyIndex+13) == 0)
             return;
         
         unsigned char key[32];
         for(int i=0; i<32; i++) 
         {
-            key[i] = *(volatile unsigned char *)(keyIndex+10+i);
+            key[i] = *(volatile unsigned char *)(keyIndex+9+i);
         }
 
         flash_otp_write(FLASH_OTP_MA_KEY_BLOCK, 0, key, 32);
