@@ -268,7 +268,7 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
         //! The sessionKeyHash will be used for encrypting device firmware
         //! Although the source code of firmware(this source code) is open, The reason we encrypt the firmware 
         //! is that to make sure there is no man in the middle/proxy who try to poison the 
-        //! device firmware while updating the it.
+        //! device firmware while updating it.
         for( int i=0; i<32; i++ )
         {
             auth.sessionKeyHash[i] = sessionKey[i];
