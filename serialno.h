@@ -23,6 +23,6 @@
 // buffer has to be (at least) 25 chars long
 void    fill_serialno_fixed (char *s);
 //! Buffer 's' has to be (at least) 32 chars long
-void    SerialNumberGet32   (char* s);
+void    SerialNumberGet32   (unsigned char* s);
 
 #endif

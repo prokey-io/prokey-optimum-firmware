@@ -38,7 +38,7 @@ void fill_serialno_fixed(char *s)
 
 //! ProKey 
 //! Lenght of 's' should be at least 32 bytes 
-void SerialNumberGet32(char* s)
+void SerialNumberGet32(unsigned char* s)
 {
 	uint32_t uuid[8];
 	

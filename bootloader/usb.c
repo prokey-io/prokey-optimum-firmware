@@ -102,21 +102,20 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
     //! Prokey Commands
 		//! Prokey Restart (id 65520)
-		if (msg_id == 0xFFF0) 
+		if (msg_id == USB_MSG_ID_RESTART_REG) 
 		{		
 			DeviceReset(false);
 			return;
 		}
 
 		//! Prokey Challenge (id 65521)
-		if (msg_id == 0xFFF1) 
+		if (msg_id == USB_MSG_ID_CHALLENGE_REQ) 
 		{ 	
 			flash_state = STATE_OPEN;
 			sAuthResponse ar;
-			uint8_t err=0x40;
-			if( AuthNext( buf, 9, &ar, &err ) == false )
+			if( AuthNext( buf, 9, &ar ) == false )
 			{
-				sendMsgFailureWithReason(dev, err);
+				sendMsgFailureWithReason(dev, ar.response[0]);
 				return;
 			}
 
@@ -125,24 +124,65 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         layoutDialog(&bmp_icon_info, NULL, NULL, NULL, "Your Prokey is", "genuine", NULL, NULL, NULL, NULL);
       }
 
-			SendPacketToUsb( dev, 0xFFF1, ar.response, ar.len );
+			SendPacketToUsb( dev, USB_MSG_ID_CHALLENGE_RES, ar.response, ar.len );
 			return;
 		}
 
-    if (msg_id == 0x0000) 
+    //! Get Authenticate status
+    if (msg_id == USB_MSG_ID_AUTH_STAT_REQ)
+    {
+      sAuthResponse ar;
+      AuthStatus(&ar);
+      SendPacketToUsb( dev, USB_MSG_ID_AUTH_STAT_RES, ar.response, ar.len);
+      return;
+    }
+
+    //! Request to set the AuthKey in OTP
+    if(msg_id == USB_MSG_ID_SET_OTP_REQ)
+    {
+      sAuthResponse ar;
+      //! If OTP is already set, the function returns error
+      if( AuthSetKey(&ar) == false )
+      {
+        sendMsgFailureWithReason(dev, ar.response[0]);
+      }
+      else
+      {
+        SendPacketToUsb( dev, USB_MSG_ID_SET_OTP_RES, ar.response, ar.len);
+      }
+
+      return;
+    }
+
+    //! Request ACK
+    if(msg_id == USB_MSG_ID_OTP_WRITE_REQ)
+    {
+      sAuthResponse ar;
+      if(AuthWriteAuthKeyToOpt(buf, 9, &ar) == false)
+      {
+        sendMsgFailureWithReason(dev, ar.response[0]);
+      }
+      else
+      {
+        SendPacketToUsb(dev, USB_MSG_ID_OTP_WRITE_RES, ar.response, ar.len);
+      }
+      return;
+    }
+
+    if (msg_id == USB_MSG_ID_INITIALIZE) 
     {  // Initialize message (id 0)
       send_msg_features(dev);
       flash_state = STATE_OPEN;
       return;
     }
 
-    if (msg_id == 0x0037) 
+    if (msg_id == USB_MSG_ID_GET_FEATURES) 
     {  // GetFeatures message (id 55)
       send_msg_features(dev);
       return;
     }
 
-    if (msg_id == 0x0001) 
+    if (msg_id == USB_MSG_ID_PING) 
     {  // Ping message (id 1)
       send_msg_success(dev);
       return;
@@ -151,13 +191,13 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if( AuthIsOkay() == false )
   {
-    sendMsgFailureWithReason(dev, 0x49);
+    sendMsgFailureWithReason(dev, AUTH_ERR_UNAUTHORIZED);
     return;
   }
 
   if (flash_state == STATE_READY || flash_state == STATE_OPEN)
   {
-    if (msg_id == 0x0005) 
+    if (msg_id == USB_MSG_ID_WIPE) 
     {  // WipeDevice message (id 5)
       layoutDialog(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
       bool but = get_button_response();
@@ -187,7 +227,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if (flash_state == STATE_OPEN) 
   {
-    if (msg_id == 0x0006) 
+    if (msg_id == USB_MSG_ID_ERASE_FIRMWARE) 
     {  // FirmwareErase message (id 6)
 
       bool proceed = false;
@@ -222,7 +262,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
   if (flash_state == STATE_FLASHSTART) 
   {
-    if(msg_id == 0x0007)
+    if(msg_id == USB_MSG_ID_WRITE_FIRMWARE)
 		{
 			//! Firmware Lenght
 			//! Length-delimited type
@@ -278,7 +318,6 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 						}
 
 						const uint32_t *w = (uint32_t *)&plain[i];
-						//const uint32_t *w = (uint32_t *)&toDecript[i];
 						flash_program_word(FLASH_APP_START + flash_pos, *w);
 						flash_pos += 4;
 					}
@@ -334,6 +373,17 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 		// flashing done
 		if (flash_pos == flash_len) 
 		{
+      //! The reason we check the SP here is that flashing the firmware is a time consuming process and this time prevents attacker(man in the middle) to
+      //! brute force different Encrypted Key
+      //TODO: Better to check a magic to make sure Encrypted Key is correct.
+      if((stackPointer & 0x2FFE0000) != 0x20000000)
+      {
+        send_msg_failure(dev);
+        flash_state = STATE_END;
+        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SP");
+        return;
+      }
+
 			flash_unlock();
 			flash_program_word(FLASH_APP_START, stackPointer);
 			flash_lock();
@@ -349,6 +399,9 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			return;
 		}
   }
+
+  //! MsgId not supported
+  sendMsgFailureWithReason(dev, 0xFF);
 }
 
 static void set_config(usbd_device *dev, uint16_t wValue) {

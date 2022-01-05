@@ -37,6 +37,7 @@
 #include "util.h"
 #include "auth.h"
 #include "common.h"
+#include "updateAuthKey.h"
 
 bool get_button_response(void) {
   do {
@@ -119,6 +120,19 @@ void BootloaderMainMenu     ( void )
 	oledInvert(0,0,127,8);
 
 	oledDrawBitmap(40, 10, &bmp_logo48);
+
+	//! Show version
+	unsigned char buf[7];
+	buf[0] = 'v';
+	buf[1] = VERSION_MAJOR + '0';
+	buf[2] = '.';
+	buf[3] = VERSION_MINOR + '0';
+	buf[4] = '.';
+	buf[5] = VERSION_PATCH + '0';
+	buf[6] = '\n';
+
+	oledDrawString(0,56, buf, FONT_STANDARD);
+
 	oledRefresh();
 }
 
@@ -167,6 +181,9 @@ int main(void) {
 	
 	// Enable MPU
 	mpu_config_bootloader();
+
+	// Update AuthKey from firmware content
+	UpdateAuthKey();
 
 	AuthInit();
 

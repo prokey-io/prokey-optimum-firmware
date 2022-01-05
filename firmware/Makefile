@@ -7,7 +7,6 @@ OBJS += udp.o
 else
 OBJS += usb.o
 OBJS += bl_check.o
-OBJS += otp.o
 OBJS += ../auth.o
 endif
 

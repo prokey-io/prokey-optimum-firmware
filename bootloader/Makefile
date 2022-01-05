@@ -2,6 +2,7 @@ NAME  = bootloader
 
 OBJS += bootloader.o
 OBJS += usb.o
+OBJS += updateAuthKey.o
 
 OBJS += ../crypto/bignum.small.o
 OBJS += ../crypto/ecdsa.small.o

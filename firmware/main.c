@@ -38,6 +38,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include "prokey_recovery.h"
 #include "pin_number.h"
+#include "firmwareAuthKey.h"
 #if !EMULATOR
 #include <libopencm3/stm32/desig.h>
 #include "otp.h"
@@ -166,6 +167,9 @@ int main(void)
   oledRefresh();
 
   config_init();
+
+  //! To avoid compiler optimizer
+  (void)firmwareAuthKey[0];
 
   // Check the pin number before initializing the USB
   bool isScreenSaver = false;

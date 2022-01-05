@@ -20,16 +20,16 @@
 #ifndef __BOOTLOADER_H__
 #define __BOOTLOADER_H__
 
-#define VERSION_MAJOR 2
+#define VERSION_MAJOR 3
 #define VERSION_MINOR 0
-#define VERSION_PATCH 1
+#define VERSION_PATCH 0
 
 #define STR(X) #X
 #define VERSTR(X) STR(X)
 
-#define VERSION_MAJOR_CHAR "\x02"
+#define VERSION_MAJOR_CHAR "\x03"
 #define VERSION_MINOR_CHAR "\x00"
-#define VERSION_PATCH_CHAR "\x01"
+#define VERSION_PATCH_CHAR "\x00"
 
 #include <stdbool.h>
 #include <stdint.h>
