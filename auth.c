@@ -247,6 +247,13 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
             return false;
         }
 
+        //! To randomize the session key, device and server randoms are mixed with the authKey.
+        for( int i=0; i<16; i++ )
+        {
+            key[i*2] += auth.devRand[i];
+            key[i*2 + 1] += auth.serRand[i];
+        }
+
         //! Hash the Key for 3 times to make the session key
         sha256_Raw( key, 32, sessionKey );
         sha256_Raw( sessionKey, 32, key );
