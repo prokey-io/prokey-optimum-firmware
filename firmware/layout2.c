@@ -229,6 +229,17 @@ void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
                line6);
 }
 
+void layoutDialogSwipeEx(const BITMAP *icon, const char *btnNo,
+                         const char *btnYes, const char *desc,
+                         const char *line1, const char *line2,
+                         const char *line3, const char *line4,
+                         const char *line5, const char *line6, uint8_t font) {
+  layoutLast = layoutDialogSwipe;
+  layoutSwipe();
+  layoutDialogEx(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,
+                 line6, font);
+}
+
 void layoutProgressSwipe(const char *desc, int permil) {
   if (layoutLast == layoutProgressSwipe) {
     oledClear();
@@ -398,7 +409,7 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
                     NULL);
 }
 
-static bool is_valid_ascii(const uint8_t *data, uint32_t size) {
+bool is_valid_ascii(const uint8_t *data, uint32_t size) {
   for (uint32_t i = 0; i < size; i++) {
     if (data[i] < ' ' || data[i] > '~') {
       return false;
@@ -993,4 +1004,23 @@ void layoutRippleConfirmTx(uint64_t amount, char* to)
                    amountstr, sizeof(amountstr));
   strlcat(amountstr, " to", sizeof(amountstr));
   render_address_dialog(NULL, to, title, amountstr, NULL);
+}
+
+void layoutConfirmHash(const BITMAP *icon, const char *description,
+                       const uint8_t *hash, uint32_t len) {
+  const char **str = split_message_hex(hash, len);
+
+  layoutSwipe();
+  oledClear();
+  oledDrawBitmap(0, 0, icon);
+  oledDrawString(20, 0 * 9, description, FONT_STANDARD);
+  oledDrawString(20, 1 * 9, str[0], FONT_FIXED);
+  oledDrawString(20, 2 * 9, str[1], FONT_FIXED);
+  oledDrawString(20, 3 * 9, str[2], FONT_FIXED);
+  oledDrawString(20, 4 * 9, str[3], FONT_FIXED);
+  oledHLine(OLED_HEIGHT - 13);
+
+  layoutButtonNo(_("Cancel"));
+  layoutButtonYes(_("Confirm"));
+  oledRefresh();
 }

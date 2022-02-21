@@ -93,7 +93,12 @@ void layoutRippleConfirmDestinationTag(uint32_t tag);
 void layoutRippleConfirmFee(uint64_t fee);
 void layoutRippleConfirmTx(uint64_t amount, char* to);
 
+void layoutConfirmHash(const BITMAP *icon, const char *description,
+                       const uint8_t *hash, uint32_t len);
+
 const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen);
 const char **split_message_hex(const uint8_t *msg, uint32_t len);
+
+bool is_valid_ascii(const uint8_t *data, uint32_t size);
 
 #endif
