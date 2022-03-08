@@ -63,15 +63,15 @@ static uint8_t flash_anim = 0;
 static uint32_t stackPointer = 0;
 static uint32_t buttonsTestCounter = 0;
 static uint32_t buttonsTestThreshold = 4000000;
-
-aes_decrypt_ctx decCtx;
+static SHA256_CTX ctx;
 
 static void rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
   static uint16_t msg_id = 0xFFFF;
   static uint8_t buf[64] __attribute__((aligned(4)));
-  static uint8_t toDecript[16] __attribute__((aligned(4)));
-	static int di;
+  static uint8_t code[32] __attribute__((aligned(4)));
+	static int di = 0;
+  static int flashProgrammedLen = 0;
 	
 
   if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
@@ -285,47 +285,32 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 				return;
 			}
 
-			aes_init();
-			aes_decrypt_key256(AuthGet()->sessionKeyHash, &decCtx );
-
 			flash_state = STATE_FLASHING;
-			flash_pos=0;
-			di = 0;
-			bool isFirst = true;
+      //! We skip writing the first 4 bytes now
+			flash_pos=4;
+      flashProgrammedLen = 4;
 
-			flash_unlock();
-			while (p < buf + 64) 
-			{
-				toDecript[di++] = *p;
-				if( di == 16 )
-				{
-					di = 0;
+      //! Initial Hasher
+      sha256_Init(&ctx);
 
-					uint8_t plain[16] __attribute__((aligned(4)));
-					aes_decrypt( toDecript, plain, &decCtx );
-					
-					for( int i=0; i<16; i+=4 )
-					{
-						if( isFirst )
-						{
-							isFirst = false;
-							stackPointer = plain[i];
-							stackPointer |= plain[i+1] << 8;
-							stackPointer |= plain[i+2] << 16;
-							stackPointer |= plain[i+3] << 24;
-							flash_pos += 4;
-							continue;
-						}
+      //! Hash the first 53 bytes
+      sha256_Update(&ctx, &buf[11], 64-11);
 
-						const uint32_t *w = (uint32_t *)&plain[i];
-						flash_program_word(FLASH_APP_START + flash_pos, *w);
-						flash_pos += 4;
-					}
-					
-				}
-				p++;
-			}
-			flash_lock();
+      //! stackPointer will be written in the flash after checking the signature
+      stackPointer = buf[11];
+      stackPointer |= buf[12] << 8;
+      stackPointer |= buf[13] << 16;
+      stackPointer |= buf[14] << 24;
+
+      //! Write bytes to flash
+      flash_unlock();
+      for(int i=15; i<64; i++)
+      {
+        flash_program_byte( FLASH_APP_START + flash_pos, buf[i]);
+        flash_pos++;
+        flashProgrammedLen++;
+      }
+      flash_lock();
 
 			return;
 		}
@@ -348,19 +333,24 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 		}
 		flash_anim++;
 		flash_unlock();
-		while (p < buf + 64 && flash_pos < flash_len) 
+
+		while (p < buf + 64 && flashProgrammedLen < flash_len) 
 		{
-			toDecript[di++] = *p;
-			if( di == 16 )
+			code[di++] = *p;
+      flashProgrammedLen++;
+
+      //! We update the flash and hasher after every 32 bytes
+			if( di == 32 )
 			{
 				di = 0;
+
+        //! Update hasher
+        sha256_Update(&ctx, code, 32);
 				
-				uint8_t plain[16] __attribute__((aligned(4)));
-				aes_decrypt( toDecript, plain, &decCtx );
-				
-				for( int i=0; i<16; i+=4 )
+        //! Write the 32 bytes to flash
+				for( int i=0; i<32; i+=4 )
 				{
-					const uint32_t *w = (uint32_t *)&plain[i];
+					const uint32_t *w = (uint32_t *)&code[i];
 					flash_program_word(FLASH_APP_START + flash_pos, *w);
 					flash_pos += 4;
 				}
@@ -371,8 +361,18 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 		flash_lock();
 
 		// flashing done
-		if (flash_pos == flash_len) 
+		if (flashProgrammedLen == flash_len) 
 		{
+      //! if anything left in the buffer
+      if(di > 0)
+      {
+        sha256_Update(&ctx, code, di);
+        for(int i=0; i<di; i++ )
+        {
+          flash_program_byte( FLASH_APP_START + flash_pos, code[i]);
+          flash_pos++;
+        }
+      }
       //! The reason we check the SP here is that flashing the firmware is a time consuming process and this time prevents attacker(man in the middle) to
       //! brute force different Encrypted Key
       //TODO: Better to check a magic to make sure Encrypted Key is correct.
