@@ -40,6 +40,10 @@
 #define USB_MSG_ID_OTP_WRITE_REQ    0xFFF7
 #define USB_MSG_ID_OTP_WRITE_RES    0xFFF8
 
+#define USB_MSG_ID_SET_FIRMWARE_SIG_REQ 0xFFF9
+#define USB_MSG_ID_SET_FIRMWARE_SIG_RES 0xFFFA
+
+
 void usbLoop(void);
 
 #endif

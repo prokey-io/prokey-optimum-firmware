@@ -13,6 +13,7 @@ OBJS += ../crypto/aes/aescrypt.o
 OBJS += ../crypto/aes/aeskey.o
 OBJS += ../crypto/aes/aes_modes.o
 OBJS += ../crypto/aes/aestab.o
+OBJS += signatures.o
 
 CFLAGS += -DUSE_PRECOMPUTED_IV=0
 CFLAGS += -DUSE_PRECOMPUTED_CP=0

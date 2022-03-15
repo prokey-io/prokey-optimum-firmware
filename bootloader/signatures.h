@@ -23,47 +23,26 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-extern const uint32_t FIRMWARE_MAGIC_OLD;  // TRZR
-extern const uint32_t FIRMWARE_MAGIC_NEW;  // TRZF
+typedef struct _sSigResponse {
+    unsigned char   response[8];
+    unsigned char   len;
+} sSigResponse;
 
 #define SIG_OK 0x5A3CA5C3
 #define SIG_FAIL 0x00000000
 
-bool firmware_present_old(void);
-int signatures_old_ok(void);
+//! 1(Proto) + 1(version) + 2(Proto) + 3(indexes) + 64(sig1) + 64(sig2) + 64(sig3)  
+#define SIG_RAW_DATA_LEN        202
 
-// we use the same structure as T2 firmware header
-// but we don't use the field sig
-// and rather introduce fields sig1, sig2, sig3
-// immediately following the chunk hashes
+#define SIG_ERR_PROTOBUF        0x60 
+#define SIG_ERR_INDEX           0x61
+#define SIG_ERR_LEN             0x62
 
-typedef struct {
-  uint32_t magic;
-  uint32_t hdrlen;
-  uint32_t expiry;
-  uint32_t codelen;
-  uint32_t version;
-  uint32_t fix_version;
-  uint8_t __reserved1[8];
-  uint8_t hashes[512];
-  uint8_t sig1[64];
-  uint8_t sig2[64];
-  uint8_t sig3[64];
-  uint8_t sigindex1;
-  uint8_t sigindex2;
-  uint8_t sigindex3;
-  uint8_t __reserved2[220];
-  uint8_t __sigmask;
-  uint8_t __sig[64];
-} __attribute__((packed)) image_header;
 
-#define FW_CHUNK_SIZE 65536
 
-bool firmware_present_new(void);
-void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]);
-int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32]);
-int check_firmware_hashes(const image_header *hdr);
+#define SIG_OK 0x5A3CA5C3
+#define SIG_FAIL 0x00000000
 
-int mem_is_empty(const uint8_t *src, uint32_t len);
+bool SignatureSet( unsigned char* buf, sSigResponse* res);
 
 #endif
