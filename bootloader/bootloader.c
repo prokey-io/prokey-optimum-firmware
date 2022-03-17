@@ -129,7 +129,7 @@ void BootloaderMainMenu     ( void )
 	buf[3] = VERSION_MINOR + '0';
 	buf[4] = '.';
 	buf[5] = VERSION_PATCH + '0';
-	buf[6] = '\n';
+	buf[6] = 0;
 
 	oledDrawString(0,56, buf, FONT_STANDARD);
 

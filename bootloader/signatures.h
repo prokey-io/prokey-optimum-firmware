@@ -28,9 +28,6 @@ typedef struct _sSigResponse {
     unsigned char   len;
 } sSigResponse;
 
-#define SIG_OK 0x5A3CA5C3
-#define SIG_FAIL 0x00000000
-
 //! 1(Proto) + 1(version) + 2(Proto) + 3(indexes) + 64(sig1) + 64(sig2) + 64(sig3)  
 #define SIG_RAW_DATA_LEN        202
 
@@ -43,6 +40,7 @@ typedef struct _sSigResponse {
 #define SIG_OK 0x5A3CA5C3
 #define SIG_FAIL 0x00000000
 
-bool SignatureSet( unsigned char* buf, sSigResponse* res);
+bool        SignatureSet( unsigned char* buf, sSigResponse* res);
+uint32_t    SignatureCheck( const uint8_t* hash );
 
 #endif

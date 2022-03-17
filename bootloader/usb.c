@@ -450,6 +450,18 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         return;
       }
 
+      uint8_t hash[32];
+      sha256_Final(&ctx, hash);
+      if(SignatureCheck(hash) == SIG_FAIL) 
+      {
+        flash_unlock();
+        flash_erase_sector(FLASH_CODE_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
+        flash_lock();
+        flash_state = STATE_END;
+        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SIG");
+        return;
+      }
+
 			flash_unlock();
 			flash_program_word(FLASH_APP_START, stackPointer);
 			flash_lock();
