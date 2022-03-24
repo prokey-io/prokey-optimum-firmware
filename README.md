@@ -1,4 +1,4 @@
-# prokey-optimum-firmware
+# Prokey Pptimum Firmware
 ## What is Prokey Optimum?
 The Prokey Optimum is a secure, easy-to-use cryptocurrency hardware wallet that protects your crypto assets from online and offline attacks, while also supporting a wide range of cryptocurrencies without installing any application, letting you enjoy an all-in-one web-based wallet.
 ## Official websites
@@ -80,3 +80,26 @@ pipenv run script/setup
 ```
 pipenv run script/cibuild
 ```
+
+## Run emulator
+- To run the emulator, you need to install SDL2 first
+```
+sudo apt install libsdl2-dev
+```
+
+- Set the EMULATOR=1
+```
+export EMULATOR=1
+```
+
+- Build the code
+```
+pipenv run script/setup
+pipenv run script/cibuild
+```
+
+- Run the emulator
+```
+./firmware/prokey.elf
+```
+* If you are using Ubuntu for windows, you need to install GWSL
