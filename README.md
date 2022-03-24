@@ -8,9 +8,54 @@ The Prokey Optimum is a secure, easy-to-use cryptocurrency hardware wallet that 
 - [Blog](https://prokey.io/blog)
 ## How to build (Ubuntu)
 ### Prerequisites
-- Download [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) and add to PATH
+- Download [GNU ARM Embedded toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/downloads) , unzip and add to PATH
+```
+wget https://developer.arm.com/-/media/Files/downloads/gnu/11.2-2022.02/binrel/gcc-arm-11.2-2022.02-x86_64-arm-none-eabi.tar.xz
+mkdir gcc-arm
+tar -xf ./gcc-arm-11.2-2022.02-x86_64-arm-none-eabi.tar.xz -C ~/gcc-arm/
+mv ~/gcc-arm/gcc-arm-11.2-2022.02-x86_64-arm-none-eabi ~/gcc-arm/gcc-arm
+nano .profile
+```
+
+Add this line to end of the file and save:
+```
+export PATH=$PATH:$HOME/gcc-arm/gcc-arm/bin
+```
+
 - Make sure you have installed Python3
+```
+python --version
+```
+If you get "Command 'python' not found" but you have python3 installed, run following command to make python3 as default:
+```
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+```
+
+- Install python3-pip
+```
+sudo apt install python3-pip
+```
+
 - Install [pipenv](https://pipenv.readthedocs.io/en/latest/install/)
-- Install git: ```sudo apt install git```
+```
+pip3 install --user pipenv
+```
+
+- Install git
+```
+sudo apt install git
+```
+
 - Install protobuf [Protobuf](https://github.com/protocolbuffers/protobuf/releases/download/v3.19.4/protoc-3.19.4-linux-x86_64.zip)
-- 
+```
+wget https://github.com/protocolbuffers/protobuf/releases/download/v3.19.4/protoc-3.19.4-linux-x86_64.zip
+mkdir protoc
+unzip protoc-3.19.4-linux-x86_64.zip -d protoc
+nano .profile
+```
+
+Add following line to the end of file and save the changes
+```
+export PATH=$PATH:$HOME/protoc/bin
+```
+- Logout and login again or reboot the system
