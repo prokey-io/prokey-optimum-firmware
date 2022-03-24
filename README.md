@@ -59,3 +59,24 @@ Add following line to the end of file and save the changes
 export PATH=$PATH:$HOME/protoc/bin
 ```
 - Logout and login again or reboot the system
+
+### Get the code and compile the code
+- Get the code from github repository
+```
+git clone https://github.com/prokey-io/prokey-optimum-firmware.git
+cd prokey-optimum-firmware
+```
+
+- Install environment
+```
+pipenv install
+```
+
+- Initialize the repository
+```
+pipenv run script/setup
+```
+- And finally build the code
+```
+pipenv run script/cibuild
+```
