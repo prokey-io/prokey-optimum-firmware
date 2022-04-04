@@ -118,7 +118,7 @@ bool SignatureSet( unsigned char* d, sSigResponse* res)
 
   //! Signature lenght is 64x3 = 192 bytes
   //! C001 => (VarInt) => 1100 0000 = 192
-  if(*d++ != 0xC0 && *d++ != 0x01)
+  if(*d++ != 0xC0 || *d++ != 0x01)
   {
     res->response[0] = SIG_ERR_LEN;
     return false;
