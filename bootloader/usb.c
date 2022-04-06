@@ -264,10 +264,13 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
     if(tmpSigIndex >= SIG_RAW_DATA_LEN)
     {
+      tmpSigIndex = 0;
       sSigResponse sr;
       if(SignatureSet(tmpSigData, &sr) == false)
       {
         sendMsgFailureWithReason(dev, sr.response[0]);
+        flash_state = STATE_END;
+        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error setting", "firmware signatures.", NULL, "Unplug your ProKey", "and try again.", NULL);
 				return;
       }
 
@@ -329,7 +332,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			}
 
 			const uint8_t *p = &buf[10];
-			flash_len = readprotobufint(&p);
+      int varIntLen = 0;
+			flash_len = readprotobufint(&p, &varIntLen);
 
 			if (flash_len > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) // firmware is too big
 			{ 
@@ -347,8 +351,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       //! Initial Hasher
       sha256_Init(&ctx);
 
-      //! Hash the first 53 bytes
-      sha256_Update(&ctx, p, 64-11);
+      //! Hash the first bytes
+      sha256_Update(&ctx, p, 64 - 10 - varIntLen);
 
       //! stackPointer will be written in the flash after checking the signature
       stackPointer = *p;
@@ -439,16 +443,6 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         }
         flash_lock();
       }
-      //! The reason we check the SP here is that flashing the firmware is a time consuming process and this time prevents attacker(man in the middle) to
-      //! brute force different Encrypted Key
-      //TODO: Better to check a magic to make sure Encrypted Key is correct.
-      if((stackPointer & 0x2FFE0000) != 0x20000000)
-      {
-        send_msg_failure(dev);
-        flash_state = STATE_END;
-        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SP");
-        return;
-      }
 
       uint8_t hash[32];
       sha256_Final(&ctx, hash);
@@ -458,7 +452,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         flash_erase_sector(FLASH_CODE_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
         flash_lock();
         flash_state = STATE_END;
-        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SIG");
+        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SIG1");
         return;
       }
 

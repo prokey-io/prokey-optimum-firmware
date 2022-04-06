@@ -162,14 +162,6 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
                 *dp++ = buf[n++];
         }
 
-        //! Is Key set?
-        if(flash_otp_is_locked(FLASH_OTP_MA_KEY_BLOCK) == false)
-        {
-            //! Error code 0x51: Key not set 
-            res->response[0] = AUTH_ERR_KEY_NOT_SET;
-            return false;
-        }
-
         uint8_t key[32] = {0};
         if( flash_otp_read(FLASH_OTP_MA_KEY_BLOCK, 0, key, 32) == false )
         {
