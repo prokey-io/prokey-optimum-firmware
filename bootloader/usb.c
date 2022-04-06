@@ -62,10 +62,11 @@ enum {
 static uint32_t flash_pos = 0, flash_len = 0;
 static char flash_state = STATE_READY;
 static uint8_t flash_anim = 0;
-static uint32_t stackPointer = 0;
 static uint32_t buttonsTestCounter = 0;
 static uint32_t buttonsTestThreshold = 4000000;
 static SHA256_CTX ctx;
+static uint32_t firstChunkDataLen = 0;
+static uint8_t firstFirmwareChunk[64] __attribute__((aligned(4)));
 
 static void rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
@@ -344,39 +345,20 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			}
 
 			flash_state = STATE_FLASHING;
-      //! We skip writing the first 4 bytes now
-			flash_pos=4;
-      flashProgrammedLen = 4;
 
       //! Initial Hasher
       sha256_Init(&ctx);
 
-      //! Hash the first bytes
-      sha256_Update(&ctx, p, 64 - 10 - varIntLen);
-
-      //! stackPointer will be written in the flash after checking the signature
-      stackPointer = *p;
-      p++;
+      firstChunkDataLen = 64 - 10 - varIntLen;
       
-      stackPointer |= *p << 8;
-      p++;
+      //! We skip writing the first chunk now
+			flash_pos = firstChunkDataLen;
+      flashProgrammedLen = firstChunkDataLen;
 
-      stackPointer |= *p << 16;
-      p++;
+      memcpy(firstFirmwareChunk, p, firstChunkDataLen);
 
-      stackPointer |= *p << 24;
-      p++;
-
-      //! Write bytes to flash
-      flash_unlock();
-      while( p < buf + 64)
-      {
-        flash_program_byte( FLASH_APP_START + flash_pos, *p);
-        p++;
-        flash_pos++;
-        flashProgrammedLen++;
-      }
-      flash_lock();
+      //! Hash the first bytes
+      sha256_Update(&ctx, firstFirmwareChunk, firstChunkDataLen);
 
 			return;
 		}
@@ -457,7 +439,11 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       }
 
 			flash_unlock();
-			flash_program_word(FLASH_APP_START, stackPointer);
+			//! Write the first firmware chunk now
+      for(uint32_t i=0; i<firstChunkDataLen; i++ )
+      {
+         flash_program_byte(FLASH_APP_START + i, firstFirmwareChunk[i]);
+      }
 			flash_lock();
 
 			layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware", "successfully installed.", NULL, "You may now", "unplug your Prokey.", NULL);
