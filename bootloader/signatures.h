@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define SIG_ERR_INVALID_SIG 0x60
+
 typedef struct _sSigResponse {
     unsigned char   response[8];
     unsigned char   len;

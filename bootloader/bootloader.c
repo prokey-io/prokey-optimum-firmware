@@ -37,7 +37,6 @@
 #include "util.h"
 #include "auth.h"
 #include "common.h"
-#include "updateAuthKey.h"
 
 bool get_button_response(void) {
   do {
@@ -181,10 +180,7 @@ int main(void) {
 	
 	// Enable MPU
 	mpu_config_bootloader();
-
-	// Update AuthKey from firmware content
-	UpdateAuthKey();
-
+	
 	AuthInit();
 
 	bootloader_loop();

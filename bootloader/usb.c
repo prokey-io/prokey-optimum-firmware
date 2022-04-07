@@ -59,7 +59,8 @@ enum {
   STATE_END,
 };
 
-static uint32_t flash_pos = 0, flash_len = 0;
+static uint32_t flashPos = 0;
+static uint32_t flashLen = 0;
 static char flash_state = STATE_READY;
 static uint8_t flash_anim = 0;
 static uint32_t buttonsTestCounter = 0;
@@ -73,6 +74,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   static uint16_t msg_id = 0xFFFF;
   static uint8_t buf[64] __attribute__((aligned(4)));
   static uint8_t code[32] __attribute__((aligned(4)));
+  static uint8_t firstChuckOfFirmware[32] __attribute__((aligned(4)));
 	static int di = 0;
   static uint32_t flashProgrammedLen = 0;
   static uint32_t tmpSigIndex = 0;
@@ -201,8 +203,6 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
     return;
   }
 
-  
-  
   if (flash_state == STATE_READY || flash_state == STATE_OPEN)
   {
     if (msg_id == USB_MSG_ID_WIPE) 
@@ -334,9 +334,9 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
 			const uint8_t *p = &buf[10];
       int varIntLen = 0;
-			flash_len = readprotobufint(&p, &varIntLen);
+			flashLen = readprotobufint(&p, &varIntLen);
 
-			if (flash_len > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) // firmware is too big
+			if (flashLen > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) // firmware is too big
 			{ 
 				send_msg_failure(dev);
 				flash_state = STATE_END;
@@ -348,17 +348,29 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
       //! Initial Hasher
       sha256_Init(&ctx);
+      di = 0;
+      flashPos = 0;
+      flashProgrammedLen = 0;
 
-      firstChunkDataLen = 64 - 10 - varIntLen;
-      
-      //! We skip writing the first chunk now
-			flash_pos = firstChunkDataLen;
-      flashProgrammedLen = firstChunkDataLen;
+      //! Write bytes to flash
+      while(p < buf + 64)
+      {
+        code[di++] = *p;
+        flashProgrammedLen++;
+        //! We update the flash and hasher after every 32 bytes
+			  if( di == 32 )
+			  {
+				  di = 0;
 
-      memcpy(firstFirmwareChunk, p, firstChunkDataLen);
+          //! Update hasher
+          sha256_Update(&ctx, code, 32);
 
-      //! Hash the first bytes
-      sha256_Update(&ctx, firstFirmwareChunk, firstChunkDataLen);
+          //! Will write this part after checking the signature
+          memcpy(firstChuckOfFirmware, code, 32);
+          flashPos +=32;
+        }
+        p++;
+      }
 
 			return;
 		}
@@ -377,12 +389,12 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
 		const uint8_t *p = buf + 1;
 		if (flash_anim % 400 == 4) {
-			layoutProgress("Installing, Please wait", 1000 * flash_pos / flash_len);
+			layoutProgress("Installing, Please wait", 1000 * flashPos / flashLen);
 		}
 		flash_anim++;
 		
 
-		while (p < buf + 64 && flashProgrammedLen < flash_len) 
+		while (p < buf + 64 && flashProgrammedLen < flashLen) 
 		{
 			code[di++] = *p;
       flashProgrammedLen++;
@@ -400,8 +412,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 				for( int i=0; i<32; i+=4 )
 				{
 					const uint32_t *w = (uint32_t *)&code[i];
-					flash_program_word(FLASH_APP_START + flash_pos, *w);
-					flash_pos += 4;
+					flash_program_word(FLASH_APP_START + flashPos, *w);
+					flashPos += 4;
 				}
         flash_lock();
 				
@@ -409,9 +421,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			p++;
 		}
 		
-
 		// flashing done
-		if (flashProgrammedLen == flash_len) 
+		if (flashProgrammedLen == flashLen) 
 		{
       //! if anything left in the buffer
       if(di > 0)
@@ -420,8 +431,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         flash_unlock();
         for(int i=0; i<di; i++)
         {
-          flash_program_byte( FLASH_APP_START + flash_pos, code[i]);
-          flash_pos++;
+          flash_program_byte( FLASH_APP_START + flashPos, code[i]);
+          flashPos++;
         }
         flash_lock();
       }
@@ -434,17 +445,19 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         flash_erase_sector(FLASH_CODE_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
         flash_lock();
         flash_state = STATE_END;
+        sendMsgFailureWithReason(dev, SIG_ERR_INVALID_SIG);
         layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SIG1");
         return;
       }
 
+      //! After checking the signature, the first chunck of firmware(the first 32 bytes) will be written to flash memory
 			flash_unlock();
-			//! Write the first firmware chunk now
-      for(uint32_t i=0; i<firstChunkDataLen; i++ )
+      for( int i=0; i<32; i+=4 )
       {
-         flash_program_byte(FLASH_APP_START + i, firstFirmwareChunk[i]);
+        const uint32_t *w = (uint32_t *)&firstChuckOfFirmware[i];
+        flash_program_word(FLASH_APP_START + i, *w);
       }
-			flash_lock();
+      flash_lock();
 
 			layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware", "successfully installed.", NULL, "You may now", "unplug your Prokey.", NULL);
 			send_msg_success(dev);
