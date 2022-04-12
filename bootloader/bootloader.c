@@ -1,7 +1,8 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Prokey project, https://prokey.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
+ * Copyright (C) 2022 Hadi Robati <hadi@prokey.io>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -49,6 +50,19 @@ bool get_button_response(void) {
 bool firmware_present(void)
 {
 	return (((*(volatile unsigned int*)FLASH_APP_START) & 0x2FFE0000 ) == 0x20000000);
+}
+
+void MenuShowFirmwareFingerprint(const uint8_t *hash) {
+  char str[21] = {0};
+  data2hex(hash, 4, str);
+  str[8] = '.';
+  str[9] = '.';
+  str[10] = '.';
+  str[11] = '.';
+  data2hex(hash+28, 4, &str[12]);
+
+  layoutDialog(&bmp_icon_question, "Cancel", "Install", NULL , "Compare start and",
+               "end of fingerprints", NULL, str, NULL, NULL);
 }
 
 uint8_t MenuAskForRunBootloader( void )

@@ -450,17 +450,31 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         return;
       }
 
-      //! After checking the signature, the first chunck of firmware(the first 32 bytes) will be written to flash memory
-			flash_unlock();
-      for( int i=0; i<32; i+=4 )
+      MenuShowFirmwareFingerprint(hash);
+      bool isHashOk = get_button_response();
+      if(isHashOk)
       {
-        const uint32_t *w = (uint32_t *)&firstChuckOfFirmware[i];
-        flash_program_word(FLASH_APP_START + i, *w);
-      }
-      flash_lock();
+        //! After checking the signature, the first chunck of firmware(the first 32 bytes) will be written to flash memory
+        flash_unlock();
+        for( int i=0; i<32; i+=4 )
+        {
+          const uint32_t *w = (uint32_t *)&firstChuckOfFirmware[i];
+          flash_program_word(FLASH_APP_START + i, *w);
+        }
+        flash_lock();
 
-			layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware", "successfully installed.", NULL, "You may now", "unplug your Prokey.", NULL);
-			send_msg_success(dev);
+        layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware", "successfully installed.", NULL, "You may now", "unplug your Prokey.", NULL);
+			  send_msg_success(dev);
+      }
+      else
+      {
+        flash_unlock();
+        flash_erase_sector(FLASH_CODE_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
+        flash_lock();
+        send_msg_failure(dev);
+			  flash_state = STATE_END;
+			  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation", "canceled.", NULL, "You may now", "unplug your Prokey.", NULL);
+      }
 
 			flash_state = STATE_END;
 			return;
