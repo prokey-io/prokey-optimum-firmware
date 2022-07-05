@@ -121,7 +121,9 @@ void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
   }
 
   resp->has_address = true;
-  ethereum_address_checksum(pubkeyhash, resp->address, rskip60, chain_id);
+  resp->address[0] = '0';
+  resp->address[1] = 'x';
+  ethereum_address_checksum(pubkeyhash, resp->address + 2, rskip60, chain_id);
   // ethereum_address_checksum adds trailing zero
 
   if (msg->has_show_display && msg->show_display) {
