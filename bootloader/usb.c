@@ -224,7 +224,9 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       flash_state = STATE_SIGNATURE;
       return;
     }
+  }
 
+  if(flash_state == STATE_READY || flash_state == STATE_FLASHSTART){
     if (msg_id == USB_MSG_ID_ERASE_FIRMWARE) 
     {  // FirmwareErase message (id 6)
 
@@ -252,8 +254,6 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation", "canceled.", NULL, "You may now", "unplug your Prokey.", NULL);
 			return;
     }
-
-    return;
   }
 
   //! Receiving firmware signature data
