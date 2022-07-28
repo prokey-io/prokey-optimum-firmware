@@ -52,7 +52,6 @@
 
 enum {
   STATE_READY,
-  STATE_OPEN,
   STATE_SIGNATURE,
   STATE_FLASHSTART,
   STATE_FLASHING,
@@ -96,8 +95,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 		return;
   }
 
-  if (flash_state == STATE_READY || flash_state == STATE_OPEN ||
-      flash_state == STATE_FLASHSTART ) {
+  if (flash_state == STATE_READY || flash_state == STATE_FLASHSTART ) {
     if (buf[0] != '?' || buf[1] != '#' ||
         buf[2] != '#') {  // invalid start - discard
       return;
@@ -106,7 +104,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
     msg_id = (buf[3] << 8) + buf[4];
   }
 
-  if (flash_state == STATE_READY || flash_state == STATE_OPEN) {
+  if (flash_state == STATE_READY) {
 
     //! Prokey Commands
 		//! Prokey Restart (id 65520)
@@ -118,8 +116,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
 		//! Prokey Challenge (id 65521)
 		if (msg_id == USB_MSG_ID_CHALLENGE_REQ) 
-		{ 	
-			flash_state = STATE_OPEN;
+		{
 			sAuthResponse ar;
 			if( AuthNext( buf, 9, &ar ) == false )
 			{
@@ -145,7 +142,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       return;
     }
 
-    //! Request to set the AuthKey in OTP
+    //! Request to set the AuthKey in memory (won't write to OTP yet)
     if(msg_id == USB_MSG_ID_SET_OTP_REQ)
     {
       sAuthResponse ar;
@@ -162,7 +159,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       return;
     }
 
-    //! Request ACK
+    //! Request to write AuthKey into OTP permanently
     if(msg_id == USB_MSG_ID_OTP_WRITE_REQ)
     {
       sAuthResponse ar;
@@ -177,15 +174,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       return;
     }
 
-    if (msg_id == USB_MSG_ID_INITIALIZE) 
+    if (msg_id == USB_MSG_ID_INITIALIZE || msg_id == USB_MSG_ID_GET_FEATURES) 
     {  // Initialize message (id 0)
-      send_msg_features(dev);
-      flash_state = STATE_OPEN;
-      return;
-    }
-
-    if (msg_id == USB_MSG_ID_GET_FEATURES) 
-    {  // GetFeatures message (id 55)
       send_msg_features(dev);
       return;
     }
@@ -195,16 +185,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       send_msg_success(dev);
       return;
     }
-  }
 
-  if( AuthIsOkay() == false )
-  {
-    sendMsgFailureWithReason(dev, AUTH_ERR_UNAUTHORIZED);
-    return;
-  }
-
-  if (flash_state == STATE_READY || flash_state == STATE_OPEN)
-  {
     if (msg_id == USB_MSG_ID_WIPE) 
     {  // WipeDevice message (id 5)
       layoutDialog(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
@@ -243,6 +224,36 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       flash_state = STATE_SIGNATURE;
       return;
     }
+
+    if (msg_id == USB_MSG_ID_ERASE_FIRMWARE) 
+    {  // FirmwareErase message (id 6)
+
+      bool proceed = false;
+      if( firmware_present() )
+      {
+        layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install new", "firmware?", NULL, "Never do this without", "your recovery card!", NULL);
+        proceed = get_button_response();
+      }
+      else 
+      {
+        proceed = true;
+      }
+
+      if( proceed )
+      {
+          erase_code_progress();
+          send_msg_success(dev);
+
+          return;
+      }
+
+      send_msg_failure(dev);
+			flash_state = STATE_END;
+			layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation", "canceled.", NULL, "You may now", "unplug your Prokey.", NULL);
+			return;
+    }
+
+    return;
   }
 
   //! Receiving firmware signature data
@@ -275,49 +286,17 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 				return;
       }
 
+      // After setting the signature, the firmware can be written
+      flash_state = STATE_FLASHSTART;
+
+      // Send response
       SendPacketToUsb( dev, USB_MSG_ID_SET_FIRMWARE_SIG_RES, sr.response, sr.len );
-      flash_state = STATE_OPEN;
-    }
-
-    return;
-
-  }
-
-  if (flash_state == STATE_OPEN) 
-  {
-    if (msg_id == USB_MSG_ID_ERASE_FIRMWARE) 
-    {  // FirmwareErase message (id 6)
-
-      bool proceed = false;
-      if( firmware_present() )
-      {
-        layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install new", "firmware?", NULL, "Never do this without", "your recovery card!", NULL);
-        proceed = get_button_response();
-      }
-      else 
-      {
-        proceed = true;
-      }
-
-      if( proceed )
-      {
-          erase_code_progress();
-
-          send_msg_success(dev);
-          flash_state = STATE_FLASHSTART;
-
-          return;
-      }
-
-      send_msg_failure(dev);
-			flash_state = STATE_END;
-			layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation", "canceled.", NULL, "You may now", "unplug your Prokey.", NULL);
-			return;
     }
 
     return;
   }
 
+  // Receiving first chunk of firmware
   if (flash_state == STATE_FLASHSTART) 
   {
     if(msg_id == USB_MSG_ID_WRITE_FIRMWARE)
