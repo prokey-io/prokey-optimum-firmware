@@ -1,3 +1,8 @@
+Version 1.10.4
+* Support Ethereum EIP-1559 Transactions
+* Support Ethereum EIP-712 Sign Typed Data Hash
+* Support 64-bit chain IDs
+
 Version 1.10.3
 * Improve wallet recovery and mnemonic check process
 

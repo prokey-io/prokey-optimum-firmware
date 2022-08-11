@@ -33,7 +33,6 @@
 #include "oled.h"
 #include "rng.h"
 #include "setup.h"
-#include "signatures.h"
 #include "usb.h"
 #include "util.h"
 #include "auth.h"

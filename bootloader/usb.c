@@ -33,11 +33,10 @@
 #include "secp256k1.h"
 #include "sha2.h"
 #include "aes/aes.h"
-#include "signatures.h"
 #include "usb.h"
 #include "util.h"
 #include "auth.h"
-
+#include "signatures.h"
 #include <libopencm3/usb/dwc/otg_fs.h>
 #include <libopencm3/usb/dwc/otg_common.h>
 

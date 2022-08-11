@@ -28,6 +28,7 @@
         "types.h": "c",
         "layout.h": "c",
         "pin_number.h": "c",
-        "firmwareauthkey.h": "c"
+        "firmwareauthkey.h": "c",
+        "messages-ethereum.pb.h": "c"
     },
 }
