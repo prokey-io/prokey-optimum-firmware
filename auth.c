@@ -264,10 +264,8 @@ bool  AuthNext        ( unsigned char* buf, unsigned char fistByteIndex, sAuthRe
             }
         }
 
-        //! The sessionKeyHash will be used for encrypting device firmware
-        //! Although the source code of firmware(this source code) is open, The reason we encrypt the firmware 
-        //! is that to make sure there is no man in the middle/proxy who try to poison the 
-        //! device firmware while updating it.
+        //! We used to use sessionKeyHash encrypting device firmware
+        //! But after implementing 'Check Firmware Signature', we don't encrypt the firmware anymore
         for( int i=0; i<32; i++ )
         {
             auth.sessionKeyHash[i] = sessionKey[i];
@@ -340,8 +338,8 @@ void AuthStatus ( sAuthResponse* res )
     res->len = 38;
 }
 //********************************
-// This function sets the AuthKey for the first time in Prokey Production Line but won't 
-// write it into OTP until receiving next command to make sure server store it
+// This function sets the AuthKey for the first time in Prokey Production Line 
+// The key won't be written into OTP until receiving WriteAuthKeyToOpt command to make sure server already store it
 // Protobuf Schema for reference
 // message MsgAuthKey
 // {
