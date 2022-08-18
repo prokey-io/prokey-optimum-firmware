@@ -5,6 +5,50 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Bootloader",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "stutil",
+            "cwd": "${workspaceRoot}",
+            "showDevDebugOutput": "parsed",
+            "device": "STM32F405",
+            "svdFile": "F405.svd",
+            "executable": "./bootloader/bootloader.elf",
+            "preAttachCommands": [
+                "set mem inaccessible-by-default off",
+                "enable breakpoint",
+                "monitor reset"
+            ],
+            "postAttachCommands": [
+                "monitor reset halt",
+            ],
+            "preRestartCommands": [
+                "monitor reset 0",
+            ]
+        },
+        {
+            "name": "Firmware",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "stutil",
+            "cwd": "${workspaceRoot}",
+            "showDevDebugOutput": "parsed",
+            "device": "STM32F405",
+            "svdFile": "F405.svd",
+            "executable": "./firmware/prokey.elf",
+            "preAttachCommands": [
+                "set mem inaccessible-by-default off",
+                "enable breakpoint",
+                "monitor reset"
+            ],
+            "postAttachCommands": [
+                "monitor reset halt",
+            ],
+            "preRestartCommands": [
+                "monitor reset 0",
+            ]
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

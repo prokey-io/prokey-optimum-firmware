@@ -34,8 +34,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+void MenuShowFirmwareFingerprint(const uint8_t *hash);
 void show_halt(const char *line1, const char *line2);
-void layoutFirmwareFingerprint(const uint8_t *hash);
 bool get_button_response(void);
 bool firmware_present(void);
 

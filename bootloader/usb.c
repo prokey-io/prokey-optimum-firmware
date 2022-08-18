@@ -36,7 +36,7 @@
 #include "usb.h"
 #include "util.h"
 #include "auth.h"
-
+#include "signatures.h"
 #include <libopencm3/usb/dwc/otg_fs.h>
 #include <libopencm3/usb/dwc/otg_common.h>
 
@@ -48,29 +48,36 @@
 #include "usb_erase.h"
 #include "usb_send.h"
 
+
 enum {
   STATE_READY,
-  STATE_OPEN,
+  STATE_SIGNATURE,
   STATE_FLASHSTART,
   STATE_FLASHING,
   STATE_END,
 };
 
-static uint32_t flash_pos = 0, flash_len = 0;
+static uint32_t flashPos = 0;
+static uint32_t flashLen = 0;
 static char flash_state = STATE_READY;
 static uint8_t flash_anim = 0;
-static uint32_t stackPointer = 0;
 static uint32_t buttonsTestCounter = 0;
 static uint32_t buttonsTestThreshold = 4000000;
-
-aes_decrypt_ctx decCtx;
+static SHA256_CTX ctx;
+static uint32_t firstChunkDataLen = 0;
+static uint8_t firstFirmwareChunk[64] __attribute__((aligned(4)));
 
 static void rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
   static uint16_t msg_id = 0xFFFF;
   static uint8_t buf[64] __attribute__((aligned(4)));
-  static uint8_t toDecript[16] __attribute__((aligned(4)));
-	static int di;
+  static uint8_t code[32] __attribute__((aligned(4)));
+  static uint8_t firstChuckOfFirmware[32] __attribute__((aligned(4)));
+	static int di = 0;
+  static uint32_t flashProgrammedLen = 0;
+  static uint32_t tmpSigIndex = 0;
+
+  static uint8_t  tmpSigData[202];
 	
 
   if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
@@ -87,8 +94,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 		return;
   }
 
-  if (flash_state == STATE_READY || flash_state == STATE_OPEN ||
-      flash_state == STATE_FLASHSTART ) {
+  if (flash_state == STATE_READY || flash_state == STATE_FLASHSTART ) {
     if (buf[0] != '?' || buf[1] != '#' ||
         buf[2] != '#') {  // invalid start - discard
       return;
@@ -97,7 +103,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
     msg_id = (buf[3] << 8) + buf[4];
   }
 
-  if (flash_state == STATE_READY || flash_state == STATE_OPEN) {
+  if (flash_state == STATE_READY) {
 
     //! Prokey Commands
 		//! Prokey Restart (id 65520)
@@ -109,8 +115,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
 		//! Prokey Challenge (id 65521)
 		if (msg_id == USB_MSG_ID_CHALLENGE_REQ) 
-		{ 	
-			flash_state = STATE_OPEN;
+		{
 			sAuthResponse ar;
 			if( AuthNext( buf, 9, &ar ) == false )
 			{
@@ -136,7 +141,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       return;
     }
 
-    //! Request to set the AuthKey in OTP
+    //! Request to set the AuthKey in memory (won't write to OTP yet)
     if(msg_id == USB_MSG_ID_SET_OTP_REQ)
     {
       sAuthResponse ar;
@@ -153,7 +158,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       return;
     }
 
-    //! Request ACK
+    //! Request to write AuthKey into OTP permanently
     if(msg_id == USB_MSG_ID_OTP_WRITE_REQ)
     {
       sAuthResponse ar;
@@ -168,15 +173,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       return;
     }
 
-    if (msg_id == USB_MSG_ID_INITIALIZE) 
+    if (msg_id == USB_MSG_ID_INITIALIZE || msg_id == USB_MSG_ID_GET_FEATURES) 
     {  // Initialize message (id 0)
-      send_msg_features(dev);
-      flash_state = STATE_OPEN;
-      return;
-    }
-
-    if (msg_id == USB_MSG_ID_GET_FEATURES) 
-    {  // GetFeatures message (id 55)
       send_msg_features(dev);
       return;
     }
@@ -186,16 +184,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       send_msg_success(dev);
       return;
     }
-  }
 
-  if( AuthIsOkay() == false )
-  {
-    sendMsgFailureWithReason(dev, AUTH_ERR_UNAUTHORIZED);
-    return;
-  }
-
-  if (flash_state == STATE_READY || flash_state == STATE_OPEN)
-  {
     if (msg_id == USB_MSG_ID_WIPE) 
     {  // WipeDevice message (id 5)
       layoutDialog(&bmp_icon_question, "Cancel", "Confirm", NULL, "Do you really want to", "wipe the device?", NULL, "All data will be lost.", NULL, NULL);
@@ -222,10 +211,21 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       send_msg_failure(dev);
       return;
     }
+
+    //! Set the firmware signature
+    if(msg_id == USB_MSG_ID_SET_FIRMWARE_SIG_REQ)
+    {
+      //! First 9 bytes are for start bytes, msgId and len
+      memcpy(tmpSigData, &buf[9], 64-9);
+      tmpSigIndex = 64-9;
+
+      //! Receiving remaining data in the next USB data
+      flash_state = STATE_SIGNATURE;
+      return;
+    }
   }
 
-  if (flash_state == STATE_OPEN) 
-  {
+  if(flash_state == STATE_READY || flash_state == STATE_FLASHSTART){
     if (msg_id == USB_MSG_ID_ERASE_FIRMWARE) 
     {  // FirmwareErase message (id 6)
 
@@ -243,9 +243,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       if( proceed )
       {
           erase_code_progress();
-
           send_msg_success(dev);
-          flash_state = STATE_FLASHSTART;
 
           return;
       }
@@ -255,10 +253,49 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation", "canceled.", NULL, "You may now", "unplug your Prokey.", NULL);
 			return;
     }
+  }
+
+  //! Receiving firmware signature data
+  if(flash_state == STATE_SIGNATURE)
+  {
+    if (buf[0] != '?') // invalid contents
+		{	
+			send_msg_failure(dev);
+			flash_state = STATE_END;
+			layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error setting", "firmware signatures.", NULL, "Unplug your ProKey", "and try again.", NULL);
+			return;
+		}
+
+    int remaining = SIG_RAW_DATA_LEN - tmpSigIndex;
+    if(remaining > 63)
+      remaining = 63;
+
+    memcpy(&tmpSigData[tmpSigIndex], &buf[1], remaining);
+    tmpSigIndex += remaining;
+
+    if(tmpSigIndex >= SIG_RAW_DATA_LEN)
+    {
+      tmpSigIndex = 0;
+      sSigResponse sr;
+      if(SignatureSet(tmpSigData, &sr) == false)
+      {
+        sendMsgFailureWithReason(dev, sr.response[0]);
+        flash_state = STATE_END;
+        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error setting", "firmware signatures.", NULL, "Unplug your ProKey", "and try again.", NULL);
+				return;
+      }
+
+      // After setting the signature, the firmware can be written
+      flash_state = STATE_FLASHSTART;
+
+      // Send response
+      SendPacketToUsb( dev, USB_MSG_ID_SET_FIRMWARE_SIG_RES, sr.response, sr.len );
+    }
 
     return;
   }
 
+  // Receiving first chunk of firmware
   if (flash_state == STATE_FLASHSTART) 
   {
     if(msg_id == USB_MSG_ID_WRITE_FIRMWARE)
@@ -274,9 +311,10 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 			}
 
 			const uint8_t *p = &buf[10];
-			flash_len = readprotobufint(&p);
+      int varIntLen = 0;
+			flashLen = readprotobufint(&p, &varIntLen);
 
-			if (flash_len > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) // firmware is too big
+			if (flashLen > FLASH_TOTAL_SIZE - (FLASH_APP_START - FLASH_ORIGIN)) // firmware is too big
 			{ 
 				send_msg_failure(dev);
 				flash_state = STATE_END;
@@ -284,47 +322,33 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 				return;
 			}
 
-			aes_init();
-			aes_decrypt_key256(AuthGet()->sessionKeyHash, &decCtx );
-
 			flash_state = STATE_FLASHING;
-			flash_pos=0;
-			di = 0;
-			bool isFirst = true;
 
-			flash_unlock();
-			while (p < buf + 64) 
-			{
-				toDecript[di++] = *p;
-				if( di == 16 )
-				{
-					di = 0;
+      //! Initial Hasher
+      sha256_Init(&ctx);
+      di = 0;
+      flashPos = 0;
+      flashProgrammedLen = 0;
 
-					uint8_t plain[16] __attribute__((aligned(4)));
-					aes_decrypt( toDecript, plain, &decCtx );
-					
-					for( int i=0; i<16; i+=4 )
-					{
-						if( isFirst )
-						{
-							isFirst = false;
-							stackPointer = plain[i];
-							stackPointer |= plain[i+1] << 8;
-							stackPointer |= plain[i+2] << 16;
-							stackPointer |= plain[i+3] << 24;
-							flash_pos += 4;
-							continue;
-						}
+      //! Write bytes to flash
+      while(p < buf + 64)
+      {
+        code[di++] = *p;
+        flashProgrammedLen++;
+        //! We update the flash and hasher after every 32 bytes
+			  if( di == 32 )
+			  {
+				  di = 0;
 
-						const uint32_t *w = (uint32_t *)&plain[i];
-						flash_program_word(FLASH_APP_START + flash_pos, *w);
-						flash_pos += 4;
-					}
-					
-				}
-				p++;
-			}
-			flash_lock();
+          //! Update hasher
+          sha256_Update(&ctx, code, 32);
+
+          //! Will write this part after checking the signature
+          memcpy(firstChuckOfFirmware, code, 32);
+          flashPos +=32;
+        }
+        p++;
+      }
 
 			return;
 		}
@@ -343,52 +367,92 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
 		const uint8_t *p = buf + 1;
 		if (flash_anim % 400 == 4) {
-			layoutProgress("Installing, Please wait", 1000 * flash_pos / flash_len);
+			layoutProgress("Installing, Please wait", 1000 * flashPos / flashLen);
 		}
 		flash_anim++;
-		flash_unlock();
-		while (p < buf + 64 && flash_pos < flash_len) 
+		
+
+		while (p < buf + 64 && flashProgrammedLen < flashLen) 
 		{
-			toDecript[di++] = *p;
-			if( di == 16 )
+			code[di++] = *p;
+      flashProgrammedLen++;
+
+      //! We update the flash and hasher after every 32 bytes
+			if( di == 32 )
 			{
 				di = 0;
+
+        //! Update hasher
+        sha256_Update(&ctx, code, 32);
 				
-				uint8_t plain[16] __attribute__((aligned(4)));
-				aes_decrypt( toDecript, plain, &decCtx );
-				
-				for( int i=0; i<16; i+=4 )
+        flash_unlock();
+        //! Write the 32 bytes to flash
+				for( int i=0; i<32; i+=4 )
 				{
-					const uint32_t *w = (uint32_t *)&plain[i];
-					flash_program_word(FLASH_APP_START + flash_pos, *w);
-					flash_pos += 4;
+					const uint32_t *w = (uint32_t *)&code[i];
+					flash_program_word(FLASH_APP_START + flashPos, *w);
+					flashPos += 4;
 				}
+        flash_lock();
 				
 			}
 			p++;
 		}
-		flash_lock();
-
+		
 		// flashing done
-		if (flash_pos == flash_len) 
+		if (flashProgrammedLen == flashLen) 
 		{
-      //! The reason we check the SP here is that flashing the firmware is a time consuming process and this time prevents attacker(man in the middle) to
-      //! brute force different Encrypted Key
-      //TODO: Better to check a magic to make sure Encrypted Key is correct.
-      if((stackPointer & 0x2FFE0000) != 0x20000000)
+      //! if anything left in the buffer
+      if(di > 0)
       {
-        send_msg_failure(dev);
+        sha256_Update(&ctx, code, di);
+        flash_unlock();
+        for(int i=0; i<di; i++)
+        {
+          flash_program_byte( FLASH_APP_START + flashPos, code[i]);
+          flashPos++;
+        }
+        flash_lock();
+      }
+
+      uint8_t hash[32];
+      sha256_Final(&ctx, hash);
+      if(SignatureCheck(hash) == SIG_FAIL) 
+      {
+        flash_unlock();
+        flash_erase_sector(FLASH_CODE_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
+        flash_lock();
         flash_state = STATE_END;
-        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SP");
+        sendMsgFailureWithReason(dev, SIG_ERR_INVALID_SIG);
+        layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Error installing ", "firmware.", NULL, "Unplug your ProKey", "and try again.", "ERR:SIG1");
         return;
       }
 
-			flash_unlock();
-			flash_program_word(FLASH_APP_START, stackPointer);
-			flash_lock();
+      MenuShowFirmwareFingerprint(hash);
+      bool isHashOk = get_button_response();
+      if(isHashOk)
+      {
+        //! After checking the signature, the first chunck of firmware(the first 32 bytes) will be written to flash memory
+        flash_unlock();
+        for( int i=0; i<32; i+=4 )
+        {
+          const uint32_t *w = (uint32_t *)&firstChuckOfFirmware[i];
+          flash_program_word(FLASH_APP_START + i, *w);
+        }
+        flash_lock();
 
-			layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware", "successfully installed.", NULL, "You may now", "unplug your Prokey.", NULL);
-			send_msg_success(dev);
+        layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, "New firmware", "successfully installed.", NULL, "You may now", "unplug your Prokey.", NULL);
+			  send_msg_success(dev);
+      }
+      else
+      {
+        flash_unlock();
+        flash_erase_sector(FLASH_CODE_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
+        flash_lock();
+        send_msg_failure(dev);
+			  flash_state = STATE_END;
+			  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation", "canceled.", NULL, "You may now", "unplug your Prokey.", NULL);
+      }
 
 			flash_state = STATE_END;
 			return;

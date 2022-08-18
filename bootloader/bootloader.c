@@ -1,7 +1,8 @@
 /*
- * This file is part of the TREZOR project, https://trezor.io/
+ * This file is part of the Prokey project, https://prokey.io/
  *
  * Copyright (C) 2014 Pavol Rusnak <stick@satoshilabs.com>
+ * Copyright (C) 2022 Hadi Robati <hadi@prokey.io>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -36,7 +37,6 @@
 #include "util.h"
 #include "auth.h"
 #include "common.h"
-#include "updateAuthKey.h"
 
 bool get_button_response(void) {
   do {
@@ -49,6 +49,19 @@ bool get_button_response(void) {
 bool firmware_present(void)
 {
 	return (((*(volatile unsigned int*)FLASH_APP_START) & 0x2FFE0000 ) == 0x20000000);
+}
+
+void MenuShowFirmwareFingerprint(const uint8_t *hash) {
+  char str[21] = {0};
+  data2hex(hash, 4, str);
+  str[8] = '.';
+  str[9] = '.';
+  str[10] = '.';
+  str[11] = '.';
+  data2hex(hash+28, 4, &str[12]);
+
+  layoutDialog(&bmp_icon_question, "Cancel", "Install", NULL , "Compare start and",
+               "end of fingerprints", NULL, str, NULL, NULL);
 }
 
 uint8_t MenuAskForRunBootloader( void )
@@ -128,7 +141,7 @@ void BootloaderMainMenu     ( void )
 	buf[3] = VERSION_MINOR + '0';
 	buf[4] = '.';
 	buf[5] = VERSION_PATCH + '0';
-	buf[6] = '\n';
+	buf[6] = 0;
 
 	oledDrawString(0,56, buf, FONT_STANDARD);
 
@@ -180,10 +193,7 @@ int main(void) {
 	
 	// Enable MPU
 	mpu_config_bootloader();
-
-	// Update AuthKey from firmware content
-	UpdateAuthKey();
-
+	
 	AuthInit();
 
 	bootloader_loop();

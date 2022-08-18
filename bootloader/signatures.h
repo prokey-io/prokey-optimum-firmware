@@ -17,33 +17,32 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __USB_H__
-#define __USB_H__
+#ifndef __SIGNATURES_H__
+#define __SIGNATURES_H__
 
-#define USB_MSG_ID_INITIALIZE       0x0000
-#define USB_MSG_ID_PING             0x0001
-#define USB_MSG_ID_WIPE             0x0005
-#define USB_MSG_ID_ERASE_FIRMWARE   0x0006
-#define USB_MSG_ID_WRITE_FIRMWARE   0x0007
-#define USB_MSG_ID_GET_FEATURES     0x0037
+#include <stdbool.h>
+#include <stdint.h>
 
-#define USB_MSG_ID_RESTART_REG      0xFFF0
-#define USB_MSG_ID_CHALLENGE_REQ    0xFFF1
-#define USB_MSG_ID_CHALLENGE_RES    0xFFF1 // Same as REQ
+#define SIG_ERR_INVALID_SIG 0x60
 
-#define USB_MSG_ID_AUTH_STAT_REQ    0xFFF3
-#define USB_MSG_ID_AUTH_STAT_RES    0xFFF4
+typedef struct _sSigResponse {
+    unsigned char   response[8];
+    unsigned char   len;
+} sSigResponse;
 
-#define USB_MSG_ID_SET_OTP_REQ      0xFFF5
-#define USB_MSG_ID_SET_OTP_RES      0xFFF6
+//! 1(Proto) + 1(version) + 2(Proto) + 3(indexes) + 64(sig1) + 64(sig2) + 64(sig3)  
+#define SIG_RAW_DATA_LEN        202
 
-#define USB_MSG_ID_OTP_WRITE_REQ    0xFFF7
-#define USB_MSG_ID_OTP_WRITE_RES    0xFFF8
-
-#define USB_MSG_ID_SET_FIRMWARE_SIG_REQ 0xFFF9
-#define USB_MSG_ID_SET_FIRMWARE_SIG_RES 0xFFFA
+#define SIG_ERR_PROTOBUF        0x60 
+#define SIG_ERR_INDEX           0x61
+#define SIG_ERR_LEN             0x62
 
 
-void usbLoop(void);
+
+#define SIG_OK 0x5A3CA5C3
+#define SIG_FAIL 0x00000000
+
+bool        SignatureSet( unsigned char* buf, sSigResponse* res);
+uint32_t    SignatureCheck( const uint8_t* hash );
 
 #endif
