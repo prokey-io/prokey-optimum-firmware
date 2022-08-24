@@ -13,7 +13,7 @@ The Prokey Optimum is a secure, easy-to-use cryptocurrency hardware wallet that 
 wget https://developer.arm.com/-/media/Files/downloads/gnu/11.2-2022.02/binrel/gcc-arm-11.2-2022.02-x86_64-arm-none-eabi.tar.xz
 mkdir gcc-arm
 tar -xf ./gcc-arm-11.2-2022.02-x86_64-arm-none-eabi.tar.xz -C ./gcc-arm/
-mv ~/gcc-arm/gcc-arm-11.2-2022.02-x86_64-arm-none-eabi ./gcc-arm/gcc-arm
+mv ./gcc-arm/gcc-arm-11.2-2022.02-x86_64-arm-none-eabi ./gcc-arm/gcc-arm
 nano .profile
 ```
 
@@ -29,6 +29,11 @@ python --version
 If you get "Command 'python' not found" but you have python3 installed, run following command to make python3 as default:
 ```
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+```
+
+- Update apt
+```
+sudo apt update
 ```
 
 - Install python3-pip
