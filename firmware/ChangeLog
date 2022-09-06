@@ -1,3 +1,6 @@
+Version 1.10.5
+* Support OKChain Token
+
 Version 1.10.4
 * Support Ethereum EIP-1559 Transactions
 * Support Ethereum EIP-712 Sign Typed Data Hash

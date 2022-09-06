@@ -50,6 +50,8 @@ static const char *slip44_extras(uint32_t coin_type) {
       return "ETH";  // Ethereum Mainnet
     case 61:
       return "ETC";  // Ethereum Classic Mainnet
+    case 996:
+      return "OKT"; // OKXChain Mainnet
     case 108:
       return "UBQ";  // UBIQ
     case 137:
