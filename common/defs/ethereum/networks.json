@@ -169,6 +169,16 @@
     "blockbook": []
   },
   {
+    "chain": "okx",
+    "chain_id": 66,
+    "slip44": 996,
+    "shortcut": "OKT",
+    "name": "OKChain Token",
+    "rskip60": false,
+    "url": "https://www.okx.com/okc",
+    "blockbook": []
+  },
+  {
     "chain": "mix",
     "chain_id": 76,
     "slip44": 76,

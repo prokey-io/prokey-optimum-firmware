@@ -21,6 +21,7 @@
 				case         61: suffix = " ETC";   break;  /* Ethereum Classic */ \
 				case         62: suffix = " tETC";  break;  /* Ethereum Classic Testnet */ \
 				case         64: suffix = " ELLA";  break;  /* Ellaism */ \
+				case         66: suffix = " OKT";   break;  /* OKChain Token */ \
 				case         76: suffix = " MIX";   break;  /* Mix */ \
 				case        237: suffix = " DXN";   break;  /* DEXON */ \
 				case        820: suffix = " CLO";   break;  /* Callisto */ \
